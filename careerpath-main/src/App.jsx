@@ -117,9 +117,14 @@ import SearchResult from './pages/SearchResult';
 import Adminlogin from './pages/Adminlogin';
 import AdminDashboard from './pages/AdminDashboard';
 import ExamsPage from './pages/ExamPage';
+import AdminInstitutePage from './pages/AdminInstitutePage';
+import AdminArticlesPage from './pages/AdminArticlesPage';
+import AdminMeritsPage from './pages/AdminMeritsPage';
+import AdminExamsPage from './pages/AdminExamsPage';
 
 // Context
 import { SearchProvider } from './context/SearchContext';
+import AdminCoursesPage from './pages/AdminCoursesPAge';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -159,6 +164,11 @@ const App = () => {
           {/* Routes WITHOUT Layout */}
           <Route path="/adminlogin" element={<Adminlogin />} />
           <Route path="/admindashboard" element={<AdminDashboard />} />
+          <Route path="/admininstitutepage" element={<AdminInstitutePage />} />
+          <Route path='/admincoursespage' element={<AdminCoursesPage />} />
+          <Route path='/adminarticlespage' element={<AdminArticlesPage />} />
+          <Route path='/adminmeritspage' element={<AdminMeritsPage />} />
+          <Route path='adminexamspage' element={<AdminExamsPage />} />
 
           {/* Routes WITH Layout */}
           <Route path="/" element={<LayoutWrapper><HomePage /></LayoutWrapper>} />
