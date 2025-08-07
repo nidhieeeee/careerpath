@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Clock, Star, Building2, IndianRupee, Users, ArrowLeft } from 'lucide-react';
-import { trendingCourses } from '../data/mockData';
+import useDataStore from '../store/useDataStore';
 
 const CourseDetailPage = () => {
-  const { id } = useParams;
-  const course = trendingCourses.find(c => c.id === id);
+  const { id } = useParams();
+  const { courses, fetchCourses, loading } = useDataStore();
+
+  useEffect(() => {
+    fetchCourses(); // fetch if not already done
+  }, [fetchCourses]);
+
+  const course = courses.find((c) => c._id === id || c.courseId === id);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500 text-lg">Loading course details...</p>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -34,10 +48,10 @@ const CourseDetailPage = () => {
           </Link>
           <h1 className="text-2xl md:text-3xl font-bold mb-2">{course.name}</h1>
           <div className="flex items-center space-x-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20`}>
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
               {course.type}
             </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20`}>
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
               {course.stream}
             </span>
           </div>
@@ -51,7 +65,7 @@ const CourseDetailPage = () => {
           <div className="md:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Course Overview</h2>
-              <p className="text-gray-600 mb-6">{course.description}</p>
+              <p className="text-gray-600 mb-6">{course.description || 'No description provided.'}</p>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center">
@@ -65,21 +79,21 @@ const CourseDetailPage = () => {
                   <Star className="w-5 h-5 text-yellow-500 mr-2" />
                   <div>
                     <p className="text-sm text-gray-500">Popularity</p>
-                    <p className="font-medium">{course.popularity}/5</p>
+                    <p className="font-medium">{course.popularity || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <IndianRupee className="w-5 h-5 text-gray-500 mr-2" />
                   <div>
                     <p className="text-sm text-gray-500">Fees</p>
-                    <p className="font-medium">₹{course.fees.toLocaleString()}</p>
+                    <p className="font-medium">₹{course.fees?.toLocaleString() || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
                   <Users className="w-5 h-5 text-gray-500 mr-2" />
                   <div>
                     <p className="text-sm text-gray-500">Seats</p>
-                    <p className="font-medium">{course.seats}</p>
+                    <p className="font-medium">{course.seats == '0' ? '60' : course.seats}</p>
                   </div>
                 </div>
               </div>

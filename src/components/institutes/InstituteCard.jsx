@@ -50,7 +50,7 @@ const InstituteCard = ({ institute }) => {
         {/* Links */}
         <div className="flex items-center justify-between">
           <Link
-            to={`/institutes/${institute.id}`}
+            to={`/institutes/${institute._id}`}
             className="flex items-center text-blue-800 font-medium text-sm hover:text-blue-600"
           >
             View Details <ChevronRight className="w-4 h-4 ml-1" />

@@ -17,6 +17,7 @@ const Header = () => {
     { label: 'Merit List', path: '/merit-list' },
     { label: 'Articles', path: '/articles' },
     { label: 'Contact', path: '/contact' },
+    { label: 'Exams' , path: '/exam'},
   ];
 
   useEffect(() => {

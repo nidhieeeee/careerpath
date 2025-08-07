@@ -6,7 +6,7 @@ import { latestArticles } from '../data/mockData';
 const ArticlesPage = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   
-  const categories = ['all', 'Exams', 'Tips', 'Courses', 'Trends'];
+  const categories = ['all', 'Exams', 'Tips', 'Courses', 'Trends' , 'Scholarships'];
   
   const filteredArticles = activeCategory === 'all'
     ? latestArticles

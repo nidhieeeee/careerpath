@@ -211,4 +211,76 @@ export const latestArticles = [
     thumbnail: 'https://www.cmrit.ac.in/wp-content/uploads/2021/06/artificail.jpg',
     isFeatured: false,
   },
+    {
+    id: '5',
+    title: 'National Scholarship for Meritorious Students 2025',
+    excerpt: 'A government-funded scholarship for top-performing students across India. Apply before the deadline.',
+    content: '',
+    author: 'National Scholarship Portal',
+    date: '18 May 2025',
+    category: 'Scholarships',
+    board: 'Central Board',
+    thumbnail: 'https://images.pexels.com/photos/4145194/pexels-photo-4145194.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    isFeatured: true,
+    isNew: true,
+    downloadUrl: 'https://scholarships.gov.in'
+  }
+];
+
+// EXAM DATA
+export const examsData = [
+  {
+    id: '1',
+    name: 'NEET UG 2025',
+    date: '5 May 2025',
+    type: 'Entrance Exam',
+    category: 'Medical',
+    level: 'Undergraduate',
+    applyLink: 'https://neet.nta.nic.in/',
+  },
+  {
+    id: '2',
+    name: 'JEE Main 2025 - Session 1',
+    date: '24 Jan 2025',
+    type: 'Entrance Exam',
+    category: 'Engineering',
+    level: 'Undergraduate',
+    applyLink: 'https://jeemain.nta.nic.in/',
+  },
+  {
+    id: '3',
+    name: 'UPSC Civil Services Preliminary 2025',
+    date: '26 May 2025',
+    type: 'Government Exam',
+    category: 'Administrative Services',
+    level: 'Graduate',
+    applyLink: 'https://upsc.gov.in/',
+  },
+  {
+    id: '4',
+    name: 'SSC CGL 2025 Tier-1',
+    date: '1 June 2025',
+    type: 'Government Exam',
+    category: 'Central Govt Jobs',
+    level: 'Graduate',
+    applyLink: 'https://ssc.nic.in/',
+  },
+  {
+    id: '5',
+    name: 'CUET UG 2025',
+    date: '15 May 2025',
+    type: 'Entrance Exam',
+    category: 'University Admission',
+    level: 'Undergraduate',
+    applyLink: 'https://cuet.samarth.ac.in/',
+  },
+  {
+    id: '6',
+    name: 'CLAT 2026',
+    date: '8 Dec 2025',
+    type: 'Entrance Exam',
+    category: 'Law',
+    level: 'Undergraduate',
+    applyLink: 'https://consortiumofnlus.ac.in/',
+  },
 ];

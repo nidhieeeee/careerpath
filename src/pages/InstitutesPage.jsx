@@ -1,10 +1,28 @@
 import React, { useState } from 'react';
 import { ChevronDown, Filter } from 'lucide-react';
 import InstituteCard from '../components/institutes/InstituteCard';
-import { topInstitutes } from '../data/mockData';
+import useDataStore from '../store/useDataStore';
+import { useEffect } from 'react';
+
 
 const InstitutesPage = () => {
   const [showFilters, setShowFilters] = useState(false);
+  const { institutes, fetchInstitutes, loading } = useDataStore();
+
+  useEffect(() => {
+    if (institutes.length === 0) fetchInstitutes();
+  }, [institutes.length, fetchInstitutes]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-blue-600 text-lg font-semibold">Loading, please wait...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-16">
@@ -84,8 +102,8 @@ const InstitutesPage = () => {
       {/* Institute Grid */}
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topInstitutes.map((institute) => (
-            <InstituteCard key={institute.id} institute={institute} />
+          {institutes.map((institute) => (
+            <InstituteCard key={institute._id} institute={institute} />
           ))}
         </div>
       </div>

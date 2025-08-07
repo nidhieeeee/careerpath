@@ -30,9 +30,9 @@ const CourseCard = ({ course }) => {
             {course.type}
           </span>
         </div>
-        
-        <h3 className="font-semibold text-lg mb-2 text-gray-800">{course.name}</h3>
-        
+
+        <h3 className="font-semibold text-lg mb-2 text-gray-800">{course.name.length < 20 ? course.name : `${course.name.slice(0, 20)}...`}</h3>
+
         <div className="flex items-center mb-2">
           <Clock className="w-4 h-4 text-gray-500 mr-1" />
           <span className="text-sm text-gray-600">{course.duration}</span>
@@ -41,12 +41,12 @@ const CourseCard = ({ course }) => {
         <div className="flex items-center mb-4">
           <Star className="w-4 h-4 text-yellow-500 mr-1" />
           <span className="text-sm text-gray-600">
-            Popularity: {course.popularity}/5
+            Popularity: {course.popularity}
           </span>
         </div>
         
         <Link
-          to={`/courses/${course.id}`}
+          to={`/courses/${course._id}`}
           className="flex items-center text-blue-800 font-medium text-sm hover:text-blue-600"
         >
           View Details <ChevronRight className="w-4 h-4 ml-1" />

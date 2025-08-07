@@ -16,11 +16,46 @@ import InstituteCard from '../components/institutes/InstituteCard';
 import ArticleCard from '../components/articles/ArticleCard';
 import MeritListCard from '../components/meritList/MeritListCard';
 import HeroSection from '../components/common/Hero';
+import useDataStore from '../store/useDataStore';
+import { useEffect } from 'react';
 
 // Mock data - in a real app, this would come from an API
 import { trendingCourses, topInstitutes, latestMeritLists, latestArticles } from '../data/mockData';
 
 const HomePage = () => {
+    const {
+    courses,
+    institutes,
+    articles,
+    fetchAllData,
+    loading,
+    error
+  } = useDataStore();
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  if (loading)
+  return (
+    <div className="h-screen flex items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-blue-600 text-lg font-semibold">Loading, please wait...</p>
+      </div>
+    </div>
+  );
+
+  if (error)
+  return (
+    <div className="h-screen flex items-center justify-center bg-white">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md max-w-md text-center">
+        <strong className="font-semibold">Oops! Something went wrong.</strong>
+        <p className="mt-2">{error}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -96,8 +131,8 @@ const HomePage = () => {
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
             <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
-              {trendingCourses.map((course) => (
-                <div key={course.id} className="w-72 flex-shrink-0">
+              {courses.map((course) => (
+                <div key={course._id} className="w-72 flex-shrink-0">
                   <CourseCard course={course} />
                 </div>
               ))}
@@ -123,8 +158,8 @@ const HomePage = () => {
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
             <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
-              {topInstitutes.map((institute) => (
-                <div key={institute.id} className="w-72 flex-shrink-0">
+              {institutes.map((institute) => (
+                <div key={institute._id} className="w-72 flex-shrink-0">
                   <InstituteCard institute={institute} />
                 </div>
               ))}

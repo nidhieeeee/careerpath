@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
+import React, { use, useState } from 'react';
 import { ChevronDown, Filter } from 'lucide-react';
 import CourseCard from '../components/courses/CourseCard';
-import { trendingCourses } from '../data/mockData';
+import useDataStore from '../store/useDataStore';
+import { useEffect } from 'react';
 
 const After12thPage = () => {
   const [activeStream, setActiveStream] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const { courses, fetchCourses, loading } = useDataStore();
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
   
   // For a real app, these would be API-fetched
   // Filter courses to only include UG or Diploma
-  const relevantCourses = trendingCourses.filter(
+  const relevantCourses = courses.filter(
     course => course.type === 'UG' || course.type === 'Diploma'
   );
   
@@ -115,7 +122,7 @@ const After12thPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard key={course._id} course={course} />
             ))}
           </div>
         )}

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { useLocation } from 'react-router-dom';
+import useDataStore from './store/useDataStore';
 
 // Layouts
 import MobileLayout from './layouts/MobileLayout';
@@ -19,10 +19,13 @@ import MeritListPage from './pages/MeritListPage';
 import ArticlesPage from './pages/ArticlesPage';
 import ArticleDetailPage from './pages/ArticleDetailPage';
 import ContactPage from './pages/ContactPage';
+import SearchResult from './pages/SearchResult';
+import Adminlogin from './pages/Adminlogin';
+import AdminDashboard from './pages/AdminInstitute';
+import ExamsPage from './pages/ExamPage';
 
 // Context
 import { SearchProvider } from './context/SearchContext';
-
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -37,9 +40,14 @@ const ScrollToTop = () => {
 const App = () => {
   const isMobile = window.innerWidth < 768;
 
+  const LayoutWrapper = ({ children }) => (
+    isMobile ? <MobileLayout>{children}</MobileLayout> : <DesktopLayout>{children}</DesktopLayout>
+  );
+
+
   return (
     <Router>
-      <ScrollToTop/>
+      <ScrollToTop />
       <SearchProvider>
         <Toaster 
           position="top-center"
@@ -53,45 +61,34 @@ const App = () => {
             },
           }}
         />
-        {isMobile ? (
-          <MobileLayout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/after-12th" element={<After12thPage />} />
-              <Route path="/after-graduation" element={<AfterGraduationPage />} />
-              <Route path="/courses" element={<CoursesPage />} />
-              <Route path="/courses/:id" element={<CourseDetailPage />} />
-              <Route path="/institutes" element={<InstitutesPage />} />
-              <Route path="/institutes/:id" element={<InstituteDetailPage />} />
-              <Route path="/merit-list" element={<MeritListPage />} />
-              <Route path="/articles" element={<ArticlesPage />} />
-              <Route path="/articles/:id" element={<ArticleDetailPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-            </Routes>
-          </MobileLayout>
-        ) : (
-          <DesktopLayout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/after-12th" element={<After12thPage />} />
-              <Route path="/after-graduation" element={<AfterGraduationPage />} />
-              <Route path="/courses" element={<CoursesPage />} />
-              <Route path="/courses/:id" element={<CourseDetailPage />} />
-              <Route path="/institutes" element={<InstitutesPage />} />
-              <Route path="/institutes/:id" element={<InstituteDetailPage />} />
-              <Route path="/merit-list" element={<MeritListPage />} />
-              <Route path="/articles" element={<ArticlesPage />} />
-              <Route path="/articles/:id" element={<ArticleDetailPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-            </Routes>
-          </DesktopLayout>
-        )}
+
+        <Routes>
+          {/* Routes WITHOUT Layout */}
+          <Route path="/admin" element={<Adminlogin />} />
+          <Route path="/admin/institute" element={<AdminDashboard />} />
+
+          {/* Routes WITH Layout */}
+          <Route path="/" element={<LayoutWrapper><HomePage /></LayoutWrapper>} />
+          <Route path="/after-12th" element={<LayoutWrapper><After12thPage /></LayoutWrapper>} />
+          <Route path="/after-graduation" element={<LayoutWrapper><AfterGraduationPage /></LayoutWrapper>} />
+          <Route path="/courses" element={<LayoutWrapper><CoursesPage /></LayoutWrapper>} />
+          <Route path="/courses/:id" element={<LayoutWrapper><CourseDetailPage /></LayoutWrapper>} />
+          <Route path="/institutes" element={<LayoutWrapper><InstitutesPage /></LayoutWrapper>} />
+          <Route path="/institutes/:id" element={<LayoutWrapper><InstituteDetailPage /></LayoutWrapper>} />
+          <Route path="/merit-list" element={<LayoutWrapper><MeritListPage /></LayoutWrapper>} />
+          <Route path="/articles" element={<LayoutWrapper><ArticlesPage /></LayoutWrapper>} />
+          <Route path="/articles/:id" element={<LayoutWrapper><ArticleDetailPage /></LayoutWrapper>} />
+          <Route path="/contact" element={<LayoutWrapper><ContactPage /></LayoutWrapper>} />
+          <Route path="/search" element={<LayoutWrapper><SearchResult /></LayoutWrapper>} />
+          <Route path="/exam" element={<LayoutWrapper><ExamsPage /></LayoutWrapper>} />
+        </Routes>
       </SearchProvider>
     </Router>
   );
 };
 
 export default App;
+
 
 // function App() {
 
