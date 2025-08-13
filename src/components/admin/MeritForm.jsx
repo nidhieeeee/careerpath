@@ -1,95 +1,95 @@
-import React, { useState, useEffect } from 'react';
+import React from "react";
 
-const MeritForm = ({ data, setData, editIndex, formData, setFormData, setEditIndex }) => {
-  useEffect(() => {
-    if (editIndex !== null) {
-      setFormData(data[editIndex]);
-    } else {
-      setFormData({});
-    }
-  }, [editIndex, data]);
-
+const MeritListForm = ({
+  formData,
+  setFormData,
+  editIndex,
+  createMeritList,
+  updateMeritList,
+  cancelEdit
+}) => {
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files?.length ? URL.createObjectURL(files[0]) : value,
-    });
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const updated = [...data];
     if (editIndex !== null) {
-      updated[editIndex] = formData;
+      updateMeritList(formData._id, formData);
     } else {
-      updated.push(formData);
+      createMeritList(formData);
     }
-    setData(updated);
-    setFormData({});
-    setEditIndex(null);
-    alert(editIndex !== null ? "Merit list updated successfully!" : "Merit list added successfully!");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow-md">
-      <h2 className="text-2xl font-bold mb-10 text-center">{editIndex !== null ? "Edit" : "Add"} Merit List</h2>
-
-      <div>
-        <label className="block mb-1 font-medium">Title</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        name="name"
+        placeholder="Merit List Name"
+        value={formData.name || ""}
+        onChange={handleChange}
+        required
+        className="w-full border px-3 py-2 rounded"
+      />
+      <input
+        type="date"
+        name="date"
+        value={
+          formData.date ? formData.date.split("T")[0] : ""
+        }
+        onChange={handleChange}
+        required
+        className="w-full border px-3 py-2 rounded"
+      />
+      <input
+        name="board"
+        placeholder="Board Name"
+        value={formData.board || ""}
+        onChange={handleChange}
+        required
+        className="w-full border px-3 py-2 rounded"
+      />
+      <label className="flex items-center gap-2">
         <input
-          name="title"
-          value={formData.title || ''}
+          type="checkbox"
+          name="isNew"
+          checked={formData.isNew || false}
           onChange={handleChange}
-          placeholder="Merit List Title"
-          className="w-full p-2 border border-blue-300 rounded"
-          required
         />
-      </div>
+        Is New?
+      </label>
+      <input
+        name="downloadUrl"
+        placeholder="Download URL"
+        value={formData.downloadUrl || ""}
+        onChange={handleChange}
+        required
+        className="w-full border px-3 py-2 rounded"
+      />
 
-      <div>
-        <label className="block mb-1 font-medium">Board</label>
-        <select
-          name="board"
-          value={formData.board || ''}
-          onChange={handleChange}
-          className="w-full p-2 border border-blue-300 rounded"
-          required
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
         >
-          <option value="">Select Board</option>
-          <option value="Gujarat Board">Gujarat Board</option>
-          <option value="Maharashtra Board">Maharashtra Board</option>
-          <option value="CBSE">CBSE</option>
-        </select>
+          {editIndex !== null ? "Update" : "Add"}
+        </button>
+        {editIndex !== null && (
+          <button
+            type="button"
+            onClick={cancelEdit}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
+        )}
       </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Date</label>
-        <input
-          type="date"
-          name="date"
-          value={formData.date || ''}
-          onChange={handleChange}
-          className="w-full p-2 border border-blue-300 rounded"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Upload Document</label>
-        <input
-          type="file"
-          name="document"
-          accept=".pdf,.doc,.docx"
-          onChange={handleChange}
-          className="w-full p-2 border border-blue-300 rounded"
-        />
-      </div>
-
-      <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded">
-        {editIndex !== null ? 'Update' : 'Submit'}
-      </button>
     </form>
   );
 };
 
-export default MeritForm;
+export default MeritListForm;

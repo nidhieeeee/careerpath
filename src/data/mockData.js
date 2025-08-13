@@ -132,38 +132,31 @@ export const topInstitutes = [
 // Mock Latest Merit Lists
 export const latestMeritLists = [
   {
-    id: '1',
-    name: 'Medical College Admission List 2025',
+    id: 1,
+    name: 'Gujarat Board Merit List 2023 (Institute-wise)',
+    date: 'June 15, 2025',
     board: 'Gujarat Board',
-    date: '15 Jun 2025',
-    downloadUrl: '#',
     isNew: true,
+    downloadUrl: 'https://acpc.gujarat.gov.in/assets/uploads/media-uploader/cut-off-marks-for-the-year-2023-24-institute-wise1742982441.pdf',
   },
   {
-    id: '2',
-    name: 'Engineering College Admission List 2025',
-    board: 'Maharashtra Board',
-    date: '12 Jun 2025',
-    downloadUrl: '#',
-    isNew: true,
-  },
-  {
-    id: '3',
-    name: 'Arts & Commerce College Merit List 2025',
-    board: 'CBSE',
-    date: '10 Jun 2025',
-    downloadUrl: '#',
-    isNew: false,
-  },
-  {
-    id: '4',
-    name: 'Polytechnic Admission Merit List 2025',
+    id: 2,
+    name: 'Gujarat Board Merit List 2023 (Branch-wise)',
+    date: 'June 15, 2025',
     board: 'Gujarat Board',
-    date: '05 Jun 2025',
-    downloadUrl: '#',
     isNew: false,
+    downloadUrl: 'https://acpc.gujarat.gov.in/assets/uploads/media-uploader/cut-off-marks-for-the-year-2023-24-branch-wise1742982441.pdf',
+  },
+  {
+    id: 3,
+    name: 'Gujarat Board Merit List 2023 (Rank-wise)',
+    date: 'June 15, 2025',
+    board: 'Gujarat Board',
+    isNew: false,
+    downloadUrl: 'https://acpc.gujarat.gov.in/assets/uploads/media-uploader/cut-off-marks-for-the-year-2023-24-rank-wise1742982441.pdf',
   },
 ];
+
 
 // Mock Latest Articles
 export const latestArticles = [

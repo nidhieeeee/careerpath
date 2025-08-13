@@ -3,6 +3,7 @@ import axios from '../components/api/axios';
 import InstituteForm from '../components/admin/InstituteForm';
 import { toast } from 'react-toastify';
 import useDataStore from '../store/useDataStore';
+import AdminNavbar from '../components/admin/AdminNavbar';
 
 const AdminDashboard = () => {
   const [institutes, setInstitutes] = useState([]);
@@ -90,11 +91,13 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-10 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-blue-900 mb-8 text-center drop-shadow-sm">
-          🎓 Admin Dashboard – Institutes
-        </h1>
+    <>
+      <AdminNavbar />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-10 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold text-blue-900 mb-8 text-center drop-shadow-sm">
+            🎓 Admin Dashboard – Institutes
+          </h1>
 
         {/* Form */}
         <div className="bg-white p-6 rounded-2xl shadow-lg border border-blue-200">
@@ -190,6 +193,7 @@ const AdminDashboard = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

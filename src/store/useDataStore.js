@@ -14,9 +14,9 @@ const useDataStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const [coursesRes, institutesRes, articlesRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/courses'),
-        axios.get('http://localhost:5000/api/institutes'),
-        axios.get('http://localhost:5000/api/articles'),
+        axios.get(`${import.meta.env.VITE_BASE_URL}/courses`),
+        axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`),
+        axios.get(`${import.meta.env.VITE_BASE_URL}/articles`),
       ]);
 
       set({
@@ -32,7 +32,7 @@ const useDataStore = create((set) => ({
 fetchInstitutes: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get('http://localhost:5000/api/institutes');
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`);
       set({ institutes: res.data, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
@@ -41,7 +41,7 @@ fetchInstitutes: async () => {
     fetchCourses: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get('http://localhost:5000/api/courses');
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/courses`);
       set({ courses: res.data, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
@@ -50,7 +50,7 @@ fetchInstitutes: async () => {
     fetchCourses: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get('http://localhost:5000/api/courses');
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/courses`);
       set({ courses: res.data, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });

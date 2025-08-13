@@ -22,10 +22,13 @@ import ContactPage from './pages/ContactPage';
 import SearchResult from './pages/SearchResult';
 import Adminlogin from './pages/Adminlogin';
 import AdminDashboard from './pages/AdminInstitute';
+import AdminArticles from './pages/AdminArticles';
 import ExamsPage from './pages/ExamPage';
 
 // Context
 import { SearchProvider } from './context/SearchContext';
+import MeritListAdmin from './pages/AdminMerit';
+
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -66,6 +69,8 @@ const App = () => {
           {/* Routes WITHOUT Layout */}
           <Route path="/admin" element={<Adminlogin />} />
           <Route path="/admin/institute" element={<AdminDashboard />} />
+          <Route path="/admin/articles" element={<AdminArticles />} />
+          <Route path="/admin/meritlists" element={<MeritListAdmin/>}/>
 
           {/* Routes WITH Layout */}
           <Route path="/" element={<LayoutWrapper><HomePage /></LayoutWrapper>} />

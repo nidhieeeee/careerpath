@@ -10,10 +10,14 @@ const ArticleForm = ({ data, setData, editIndex, formData, setFormData, setEditI
   }, [editIndex, data]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value, files, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: files?.length ? URL.createObjectURL(files[0]) : value,
+      [name]: type === 'file'
+        ? URL.createObjectURL(files[0])
+        : type === 'checkbox'
+        ? checked
+        : value,
     });
   };
 
@@ -23,7 +27,7 @@ const ArticleForm = ({ data, setData, editIndex, formData, setFormData, setEditI
     if (editIndex !== null) {
       updated[editIndex] = formData;
     } else {
-      updated.push(formData);
+      updated.push({ ...formData, id: Date.now().toString() }); // generate unique ID
     }
     setData(updated);
     setFormData({});
@@ -48,7 +52,7 @@ const ArticleForm = ({ data, setData, editIndex, formData, setFormData, setEditI
       </div>
 
       <div>
-        <label className="block mb-1 font-medium">Author Name</label>
+        <label className="block mb-1 font-medium">Author</label>
         <input
           name="author"
           value={formData.author || ''}
@@ -60,15 +64,27 @@ const ArticleForm = ({ data, setData, editIndex, formData, setFormData, setEditI
       </div>
 
       <div>
-        <label className="block mb-1 font-medium">Description</label>
+        <label className="block mb-1 font-medium">Excerpt</label>
         <textarea
-          name="description"
-          value={formData.description || ''}
+          name="excerpt"
+          value={formData.excerpt || ''}
           onChange={handleChange}
-          placeholder="Article Description"
-          rows={3}
+          placeholder="Short summary"
           className="w-full p-2 border border-blue-300 rounded"
+          rows={3}
           required
+        />
+      </div>
+
+      <div>
+        <label className="block mb-1 font-medium">Full Content</label>
+        <textarea
+          name="content"
+          value={formData.content || ''}
+          onChange={handleChange}
+          placeholder="Full article content"
+          className="w-full p-2 border border-blue-300 rounded"
+          rows={5}
         />
       </div>
 
@@ -82,13 +98,26 @@ const ArticleForm = ({ data, setData, editIndex, formData, setFormData, setEditI
           required
         >
           <option value="">Select Category</option>
-          <option value="exam">Exam</option>
-          <option value="tips">Tips</option>
-          <option value="courses">Courses</option>
-          <option value="trends">Trends</option>
-          <option value="scholarships">Scholarships</option>
+          <option value="Tips">Tips</option>
+          <option value="Exams">Exams</option>
+          <option value="Courses">Courses</option>
+          <option value="Trends">Trends</option>
+          <option value="Scholarships">Scholarships</option>
         </select>
       </div>
+
+      {formData.category === "Scholarships" && (
+        <div>
+          <label className="block mb-1 font-medium">Board (Scholarship Only)</label>
+          <input
+            name="board"
+            value={formData.board || ''}
+            onChange={handleChange}
+            placeholder="E.g. Central Board"
+            className="w-full p-2 border border-blue-300 rounded"
+          />
+        </div>
+      )}
 
       <div>
         <label className="block mb-1 font-medium">Date</label>
@@ -98,40 +127,53 @@ const ArticleForm = ({ data, setData, editIndex, formData, setFormData, setEditI
           value={formData.date || ''}
           onChange={handleChange}
           className="w-full p-2 border border-blue-300 rounded"
+          required
         />
       </div>
 
       <div>
-        <label className="block mb-1 font-medium">Source / Link</label>
-        <input
-          name="link"
-          value={formData.link || ''}
-          onChange={handleChange}
-          placeholder="Optional link to source"
-          className="w-full p-2 border border-blue-300 rounded"
-        />
-      </div>
-
-      <div>
-        <label className="block font-medium text-gray-700">Upload Image (Photo)</label>
+        <label className="block font-medium">Upload Thumbnail</label>
         <input
           type="file"
-          name="photo"
+          name="thumbnail"
           accept="image/*"
           onChange={handleChange}
-          className="w-full p-2 border border-blue-300 rounded mb-2"
+          className="w-full p-2 border border-blue-300 rounded"
         />
       </div>
 
       <div>
-        <label className="block font-medium text-gray-700">Upload Document (PDF or Word)</label>
+        <label className="block font-medium">External Link (PDF or Website)</label>
         <input
-          type="file"
-          name="document"
-          accept=".pdf,.doc,.docx"
+          type="url"
+          name="downloadUrl"
+          value={formData.downloadUrl || ''}
           onChange={handleChange}
+          placeholder="e.g. https://example.com"
           className="w-full p-2 border border-blue-300 rounded"
         />
+      </div>
+
+      <div className="flex items-center space-x-4">
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            name="isFeatured"
+            checked={formData.isFeatured || false}
+            onChange={handleChange}
+          />
+          <span>Feature this article</span>
+        </label>
+
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            name="isNew"
+            checked={formData.isNew || false}
+            onChange={handleChange}
+          />
+          <span>Mark as New</span>
+        </label>
       </div>
 
       <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded">
