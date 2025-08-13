@@ -115,7 +115,7 @@ const HomePage = () => {
       </div>
 
       {/* Trending Courses */}
-      <section className="py-10 px-4">
+      {/* <section className="py-10 px-4">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
@@ -139,7 +139,7 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Top Institutes */}
       <section className="py-10 px-4 bg-gray-50">
