@@ -131,7 +131,7 @@ const HomePage = () => {
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
             <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
-              {courses.map((course) => (
+              {courses?.map((course) => (
                 <div key={course._id} className="w-72 flex-shrink-0">
                   <CourseCard course={course} />
                 </div>
