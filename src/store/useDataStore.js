@@ -8,7 +8,7 @@ const useDataStore = create((set) => ({
   articles: [],
   loading: false,
   error: null,
-  isAdmin:false,
+  isAdmin: false,
 
   fetchAllData: async () => {
     set({ loading: true, error: null });
@@ -19,48 +19,55 @@ const useDataStore = create((set) => ({
         axios.get(`${import.meta.env.VITE_BASE_URL}/articles`),
       ]);
 
+      console.log("Courses API Response:", coursesRes.data);
+      console.log("Institutes API Response:", institutesRes.data);
+      console.log("Articles API Response:", articlesRes.data);
+
       set({
-        courses: coursesRes.data,
-        institutes: institutesRes.data,
-        articles: articlesRes.data,
+        courses: Array.isArray(coursesRes.data) ? coursesRes.data : [],
+        institutes: Array.isArray(institutesRes.data) ? institutesRes.data : [],
+        articles: Array.isArray(articlesRes.data) ? articlesRes.data : [],
         loading: false,
       });
     } catch (err) {
+      console.error("fetchAllData Error:", err);
       set({ error: err.message, loading: false });
     }
   },
-fetchInstitutes: async () => {
+
+  fetchInstitutes: async () => {
     set({ loading: true });
     try {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`);
-      set({ institutes: res.data, loading: false });
+      console.log("Institutes API Response:", res.data);
+      set({
+        institutes: Array.isArray(res.data) ? res.data : [],
+        loading: false,
+      });
     } catch (err) {
+      console.error("fetchInstitutes Error:", err);
       set({ error: err.message, loading: false });
     }
   },
-    fetchCourses: async () => {
+
+  fetchCourses: async () => {
     set({ loading: true });
     try {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/courses`);
-      set({ courses: res.data, loading: false });
+      console.log("Courses API Response:", res.data);
+      set({
+        courses: Array.isArray(res.data) ? res.data : [],
+        loading: false,
+      });
     } catch (err) {
+      console.error("fetchCourses Error:", err);
       set({ error: err.message, loading: false });
     }
   },
-    fetchCourses: async () => {
-    set({ loading: true });
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/courses`);
-      set({ courses: res.data, loading: false });
-    } catch (err) {
-      set({ error: err.message, loading: false });
-    }
+
+  adminLogin: () => {
+    set({ isAdmin: true });
   },
-  adminLogin : ()=>{
-    set({
-      isAdmin:true
-    })
-  }
 }));
 
 export default useDataStore;
