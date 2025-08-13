@@ -1,13 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileText } from 'lucide-react';
 import MeritListCard from '../components/meritList/MeritListCard';
-import { latestMeritLists } from '../data/mockData';
+import axios from 'axios';
 
 const MeritListPage = () => {
   const boards = ['Gujarat Board', 'Maharashtra Board', 'CBSE'];
-  const [activeBoard, setActiveBoard] = React.useState(boards[0]);
+  const [activeBoard, setActiveBoard] = useState(boards[0]);
+  const [meritLists, setMeritLists] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredMeritLists = latestMeritLists.filter(
+  const fetchMeritLists = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/merit-lists`);
+      setMeritLists(res.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch merit lists.');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeritLists();
+  }, []);
+
+  const filteredMeritLists = meritLists.filter(
     list => list.board === activeBoard
   );
 
@@ -47,13 +66,17 @@ const MeritListPage = () => {
 
       {/* Merit Lists Grid */}
       <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMeritLists.map((meritList) => (
-            <MeritListCard key={meritList.id} meritList={meritList} />
-          ))}
-        </div>
-
-        {filteredMeritLists.length === 0 && (
+        {loading ? (
+          <p className="text-center text-gray-600">Loading merit lists...</p>
+        ) : error ? (
+          <p className="text-center text-red-600">{error}</p>
+        ) : filteredMeritLists.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMeritLists.map((meritList) => (
+              <MeritListCard key={meritList._id} meritList={meritList} />
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-10">
             <p className="text-lg text-gray-600">No merit lists available for this board.</p>
           </div>

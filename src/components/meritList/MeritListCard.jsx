@@ -40,7 +40,13 @@ const MeritListCard = ({ meritList }) => {
 
             <div className="flex items-center text-sm text-gray-500 mt-1 mb-2">
               <Calendar className="w-4 h-4 mr-1" />
-              <span>{meritList.date}</span>
+              <span>
+                {new Date(meritList.date).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
             </div>
 
             <div className="flex items-center text-xs font-medium text-gray-600 mb-3">

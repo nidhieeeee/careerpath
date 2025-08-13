@@ -1,16 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import ArticleCard from '../components/articles/ArticleCard';
-import { latestArticles } from '../data/mockData';
+import axios from 'axios';
 
 const ArticlesPage = () => {
+  const [articles, setArticles] = useState([]);
   const [activeCategory, setActiveCategory] = useState('all');
-  
-  const categories = ['all', 'Exams', 'Tips', 'Courses', 'Trends' , 'Scholarships'];
-  
-  const filteredArticles = activeCategory === 'all'
-    ? latestArticles
-    : latestArticles.filter(article => article.category === activeCategory);
+  const [loading, setLoading] = useState(true);
+
+  const categories = ['all', 'Exams', 'Tips', 'Courses', 'Trends', 'Scholarships'];
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/articles`);
+        setArticles(res.data);
+      } catch (error) {
+        console.error('Error fetching articles:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArticles();
+  }, []);
+
+  const filteredArticles =
+    activeCategory === 'all'
+      ? articles
+      : articles?.filter(article => article.category === activeCategory);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-lg">
+        Loading articles...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-16">
@@ -49,9 +74,11 @@ const ArticlesPage = () => {
       {/* Featured Article */}
       {activeCategory === 'all' && (
         <div className="container mx-auto px-4 py-6">
-          {latestArticles.filter(article => article.isFeatured).map(article => (
-            <ArticleCard key={article.id} article={article} featured={true} />
-          ))}
+          {articles
+            .filter(article => article.isFeatured)
+            .map(article => (
+              <ArticleCard key={article._id} article={article} featured={true} />
+            ))}
         </div>
       )}
 
@@ -61,7 +88,7 @@ const ArticlesPage = () => {
           {filteredArticles
             .filter(article => !article.isFeatured || activeCategory !== 'all')
             .map((article) => (
-              <ArticleCard key={article.id} article={article} />
+              <ArticleCard key={article._id} article={article} />
             ))}
         </div>
 

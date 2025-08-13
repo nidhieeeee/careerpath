@@ -1,11 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, User, ArrowLeft, Tag } from 'lucide-react';
-import { latestArticles } from '../data/mockData';
+import axios from 'axios';
 
 const ArticleDetailPage = () => {
   const { id } = useParams();
-  const article = latestArticles.find(a => a.id === id);
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArticle = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/articles/${id}`);
+        setArticle(res.data);
+      } catch (error) {
+        console.error('Error fetching article:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchArticle();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-lg">
+        Loading article...
+      </div>
+    );
+  }
 
   if (!article) {
     return (
@@ -19,33 +42,6 @@ const ArticleDetailPage = () => {
       </div>
     );
   }
-
-  // For demo purposes, let's create some mock content
-  const content = `
-    ${article.excerpt}
-
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor 
-    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis 
-    nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-
-    ## Key Points
-
-    1. Understanding the basics
-    2. Important considerations
-    3. Future prospects
-    4. Expert recommendations
-
-    ### Detailed Analysis
-
-    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore 
-    eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt 
-    in culpa qui officia deserunt mollit anim id est laborum.
-
-    ### Conclusion
-
-    Making informed decisions about your career is crucial. Consider all aspects 
-    carefully and choose the path that best aligns with your goals and interests.
-  `;
 
   return (
     <div className="min-h-screen pb-16">
@@ -91,29 +87,8 @@ const ArticleDetailPage = () => {
           </div>
 
           {/* Article Body */}
-          <div className="prose max-w-none">
-            {content.split('\n\n').map((paragraph, index) => {
-              if (paragraph.startsWith('#')) {
-                const level = paragraph.match(/^#+/)[0].length;
-                const text = paragraph.replace(/^#+\s/, '');
-                const HeadingTag = `h${level}`;
-                return (
-                  <HeadingTag
-                    key={index}
-                    className={`font-bold text-gray-800 ${
-                      level === 2 ? 'text-2xl mb-4 mt-8' : 'text-xl mb-3 mt-6'
-                    }`}
-                  >
-                    {text}
-                  </HeadingTag>
-                );
-              }
-              return (
-                <p key={index} className="text-gray-600 mb-4 leading-relaxed">
-                  {paragraph}
-                </p>
-              );
-            })}
+          <div className="prose max-w-none whitespace-pre-line">
+            {article.content}
           </div>
 
           {/* Share Section */}

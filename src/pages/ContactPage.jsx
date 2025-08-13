@@ -12,9 +12,31 @@ const ContactPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // In a real app, this would send the data to a server
-    toast.success('Message sent successfully!');
-    setFormData({ name: '', email: '', phone: '', message: '' });
+
+    fetch(`${import.meta.env.VITE_FORM_URL}`, {
+      method: 'POST',
+      headers: { 
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(response => {
+      if (response.code === 200) {
+        toast.success("Message sent successfully!");
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      }
+      else if (response.code === 422) {
+        setError(response.message);
+      }
+      else {
+        setError(response.message);
+      }
+    })
+    .catch(error => {
+      setError(error.message ? error.message : error);
+    });
   };
 
   const handleChange = (e) => {
