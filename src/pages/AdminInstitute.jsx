@@ -4,8 +4,11 @@ import InstituteForm from '../components/admin/InstituteForm';
 import { toast } from 'react-toastify';
 import useDataStore from '../store/useDataStore';
 import AdminNavbar from '../components/admin/AdminNavbar';
+import { ShieldAlert } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [institutes, setInstitutes] = useState([]);
   const [formData, setFormData] = useState({});
   const [editIndex, setEditIndex] = useState(null);
@@ -13,10 +16,32 @@ const AdminDashboard = () => {
   const listRef = useRef(null);
   const { isAdmin } = useDataStore();
 
-  if (!isAdmin) {
-    window.location.href = '/admin';
-    return null;
-  }
+
+
+if (!isAdmin) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
+      <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
+        <div className="flex justify-center mb-4">
+          <ShieldAlert className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-blue-900 mb-2">
+          Unauthorized Access
+        </h2>
+        <p className="text-gray-600 mb-6">
+          You are not authorized to view this page.  
+          If you have admin credentials, please log in by clicking the button below.
+        </p>
+        <button
+          onClick={() => navigate('/admin')}
+          className="bg-blue-800 hover:bg-blue-900 text-white font-medium px-6 py-2 rounded-lg transition"
+        >
+          Go to Login
+        </button>
+      </div>
+    </div>
+  );
+}
 
   const fetchInstitutes = async () => {
     try {

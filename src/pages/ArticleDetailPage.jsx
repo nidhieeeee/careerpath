@@ -78,7 +78,13 @@ const ArticleDetailPage = () => {
             </div>
             <div className="flex items-center">
               <Calendar className="w-4 h-4 mr-1" />
-              <span>{article.date}</span>
+              <span>
+                {new Date(article.date).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
             </div>
             <div className="flex items-center">
               <Tag className="w-4 h-4 mr-1" />

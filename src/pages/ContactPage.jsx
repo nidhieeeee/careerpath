@@ -10,8 +10,11 @@ const ContactPage = () => {
     message: '',
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
 
     fetch(`${import.meta.env.VITE_FORM_URL}`, {
       method: 'POST',
@@ -26,16 +29,20 @@ const ContactPage = () => {
       if (response.code === 200) {
         toast.success("Message sent successfully!");
         setFormData({ name: '', email: '', phone: '', message: '' });
+        setLoading(false);
       }
       else if (response.code === 422) {
         setError(response.message);
+        setLoading(false);
       }
       else {
         setError(response.message);
+        setLoading(false);
       }
     })
     .catch(error => {
       setError(error.message ? error.message : error);
+      setLoading(false);
     });
   };
 
@@ -128,10 +135,11 @@ const ContactPage = () => {
 
               <button
                 type="submit"
+                disabled={loading}
                 className="w-full bg-blue-800 text-white py-2 px-4 rounded-md hover:bg-blue-900 transition-colors flex items-center justify-center"
               >
                 <Send className="w-4 h-4 mr-2" />
-                Send Message
+                {loading ? "Sending..." : "Send Message"}
               </button>
             </form>
           </div>

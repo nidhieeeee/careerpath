@@ -5,7 +5,7 @@ const navItems = [
   { label: 'Articles', path: '/admin/articles' },
   { label: 'Institutes', path: '/admin/institute' },
   { label: 'Merit Lists', path: '/admin/meritlists' },
-  { label: 'Exams', path: '/admin/exams' },
+  // { label: 'Exams', path: '/admin/exams' },
 ];
 
 const AdminNavbar = () => {

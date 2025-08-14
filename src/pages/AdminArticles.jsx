@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import useDataStore from '../store/useDataStore';
 import { useNavigate } from 'react-router-dom';
 import AdminNavbar from '../components/admin/AdminNavbar';
+import { ShieldAlert } from 'lucide-react';
+
 
 const AdminArticles = () => {
   const [articles, setArticles] = useState([]);
@@ -42,7 +44,30 @@ const AdminArticles = () => {
     fetchArticles();
   }, []);
 
-  if (!isAdmin) return <>NOT AN ADMIN</>;
+  if (!isAdmin) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
+      <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
+        <div className="flex justify-center mb-4">
+          <ShieldAlert className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-blue-900 mb-2">
+          Unauthorized Access
+        </h2>
+        <p className="text-gray-600 mb-6">
+          You are not authorized to view this page.  
+          If you have admin credentials, please log in by clicking the button below.
+        </p>
+        <button
+          onClick={() => navigate('/admin')}
+          className="bg-blue-800 hover:bg-blue-900 text-white font-medium px-6 py-2 rounded-lg transition"
+        >
+          Go to Login
+        </button>
+      </div>
+    </div>
+  );
+}
 
   const uploadToCloudinary = async (file) => {
     const data = new FormData();
@@ -85,7 +110,8 @@ const AdminArticles = () => {
         toast.success('Article updated');
       } else {
         const res = await axios.post('/articles/admin/create', payload);
-        setArticles((prev) => [res.data.article, ...prev]);
+        // console.log('New Article Created:', res.data);
+        setArticles((prev) => [res.data, ...prev]);
         toast.success('Article added');
       }
 
@@ -240,7 +266,7 @@ const AdminArticles = () => {
           {editIndex !== null && typeof formData.thumbnail === 'string' && (
             <div>
               <img
-                src={formData.thumbnail}
+                src={formData?.thumbnail}
                 alt="Current Thumbnail"
                 className="w-40 h-24 object-cover rounded mb-2"
               />

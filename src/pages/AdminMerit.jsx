@@ -4,18 +4,41 @@ import { toast } from "react-toastify";
 import useDataStore from "../store/useDataStore";
 import AdminNavbar from "../components/admin/AdminNavbar";
 import MeritListForm from "../components/admin/MeritForm";
+import { ShieldAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const MeritListAdmin = () => {
+  const navigate = useNavigate();
   const [meritLists, setMeritLists] = useState([]);
   const [formData, setFormData] = useState({});
   const [editIndex, setEditIndex] = useState(null);
   const listRef = useRef(null);
   const { isAdmin } = useDataStore();
 
-  if (!isAdmin) {
-    window.location.href = "/admin";
-    return null;
-  }
+if (!isAdmin) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
+      <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
+        <div className="flex justify-center mb-4">
+          <ShieldAlert className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-blue-900 mb-2">
+          Unauthorized Access
+        </h2>
+        <p className="text-gray-600 mb-6">
+          You are not authorized to view this page.  
+          If you have admin credentials, please log in by clicking the button below.
+        </p>
+        <button
+          onClick={() => navigate('/admin')}
+          className="bg-blue-800 hover:bg-blue-900 text-white font-medium px-6 py-2 rounded-lg transition"
+        >
+          Go to Login
+        </button>
+      </div>
+    </div>
+  );
+}
 
   // Fetch all merit lists
   const fetchMeritLists = async () => {
@@ -92,14 +115,14 @@ const MeritListAdmin = () => {
   return (
     <>
       <AdminNavbar />
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-10 px-4 md:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-10 px-4 md:px-8">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold text-green-900 mb-8 text-center drop-shadow-sm">
+          <h1 className="text-4xl font-bold text-blue-900 mb-8 text-center drop-shadow-sm">
             Admin Dashboard – Merit Lists
           </h1>
 
           {/* Form */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-green-200">
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-blue-200">
             <MeritListForm
               formData={formData}
               setFormData={setFormData}

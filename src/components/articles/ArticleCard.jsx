@@ -35,7 +35,13 @@ const ArticleCard = ({ article, featured = false }) => {
           </span>
           <div className="flex items-center text-gray-500 text-xs">
             <Calendar className="w-3 h-3 mr-1" />
-            <span>{article.date}</span>
+            <span>
+              {new Date(article.date).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
           </div>
         </div>
         
@@ -56,7 +62,7 @@ const ArticleCard = ({ article, featured = false }) => {
           </div>
           
           <Link
-            to={`/articles/${article.id}`}
+            to={`/articles/${article._id}`}
             className="text-blue-700 font-medium text-sm hover:text-blue-900"
           >
             Read More
