@@ -15,35 +15,37 @@ const MeritListAdmin = () => {
   const listRef = useRef(null);
   const { isAdmin } = useDataStore();
 
-if (!isAdmin) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
-      <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
-        <div className="flex justify-center mb-4">
-          <ShieldAlert className="w-12 h-12 text-red-500" />
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
+          <div className="flex justify-center mb-4">
+            <ShieldAlert className="w-12 h-12 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-blue-900 mb-2">
+            Unauthorized Access
+          </h2>
+          <p className="text-gray-600 mb-6">
+            You are not authorized to view this page. If you have admin
+            credentials, please log in by clicking the button below.
+          </p>
+          <button
+            onClick={() => navigate("/admin")}
+            className="bg-blue-800 hover:bg-blue-900 text-white font-medium px-6 py-2 rounded-lg transition"
+          >
+            Go to Login
+          </button>
         </div>
-        <h2 className="text-2xl font-bold text-blue-900 mb-2">
-          Unauthorized Access
-        </h2>
-        <p className="text-gray-600 mb-6">
-          You are not authorized to view this page.  
-          If you have admin credentials, please log in by clicking the button below.
-        </p>
-        <button
-          onClick={() => navigate('/admin')}
-          className="bg-blue-800 hover:bg-blue-900 text-white font-medium px-6 py-2 rounded-lg transition"
-        >
-          Go to Login
-        </button>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   // Fetch all merit lists
   const fetchMeritLists = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/merit-lists`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/merit-lists`
+      );
       setMeritLists(res.data.reverse());
     } catch (err) {
       toast.error("Failed to fetch merit lists");
@@ -53,7 +55,10 @@ if (!isAdmin) {
   // Create new merit list
   const createMeritList = async (data) => {
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/merit-lists`, data);
+      const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/merit-lists`,
+        data
+      );
       setMeritLists((prev) => [res.data, ...prev]);
       toast.success("Merit list added");
       setFormData({});
@@ -66,7 +71,10 @@ if (!isAdmin) {
   // Update merit list
   const updateMeritList = async (id, data) => {
     try {
-      const res = await axios.put(`${import.meta.env.VITE_BASE_URL}/merit-lists/${id}`, data);
+      const res = await axios.put(
+        `${import.meta.env.VITE_BASE_URL}/merit-lists/${id}`,
+        data
+      );
       const updated = meritLists.map((item) =>
         item._id === id ? res.data : item
       );
@@ -115,14 +123,14 @@ if (!isAdmin) {
   return (
     <>
       <AdminNavbar />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 py-10 px-4 md:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 py-10 px-2 md:px-8">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold text-blue-900 mb-8 text-center drop-shadow-sm">
-            Admin Dashboard – Merit Lists
+          <h1 className="text-4xl font-extrabold text-blue-900 mb-10 text-center drop-shadow-lg tracking-tight">
+            Admin Dashboard <span className="text-blue-600">– Merit Lists</span>
           </h1>
 
           {/* Form */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-blue-200">
+          <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
             <MeritListForm
               formData={formData}
               setFormData={setFormData}
@@ -134,8 +142,8 @@ if (!isAdmin) {
           </div>
 
           {/* List */}
-          <div ref={listRef} className="mt-14">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
+          <div ref={listRef} className="mt-16">
+            <h2 className="text-3xl font-bold text-blue-800 mb-8 border-b-2 border-blue-200 pb-2 text-center tracking-tight">
               Merit Lists
             </h2>
 
@@ -144,14 +152,14 @@ if (!isAdmin) {
                 No merit lists added yet.
               </p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                 {meritLists.map((ml, index) => (
                   <div
                     key={ml._id}
-                    className="bg-white rounded-2xl shadow-md border border-green-100 p-5 flex flex-col justify-between min-h-[300px] transition hover:shadow-xl"
+                    className="bg-white rounded-[2rem] shadow-xl border border-green-200 p-7 flex flex-col justify-between min-h-[300px] transition-all duration-200 hover:shadow-2xl hover:-translate-y-1"
                   >
-                    <div className="flex flex-col gap-2">
-                      <h3 className="text-lg font-bold text-green-800">
+                    <div className="flex flex-col gap-3">
+                      <h3 className="text-xl font-bold text-green-900 truncate">
                         {ml.name}
                       </h3>
                       <p className="text-gray-700">
@@ -168,22 +176,22 @@ if (!isAdmin) {
                         href={ml.downloadUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-green-600 underline text-sm"
+                        className="text-green-700 underline text-sm font-medium hover:text-green-900"
                       >
                         Download Merit List
                       </a>
                     </div>
 
-                    <div className="mt-6 flex justify-between gap-2">
+                    <div className="mt-8 flex justify-between gap-2">
                       <button
                         onClick={() => handleEdit(index)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-4 py-2 rounded-md transition"
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white text-base px-6 py-2 rounded-xl shadow transition flex items-center gap-2 font-semibold"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => deleteMeritList(ml._id)}
-                        className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-md transition"
+                        className="bg-red-600 hover:bg-red-700 text-white text-base px-6 py-2 rounded-xl shadow transition flex items-center gap-2 font-semibold"
                       >
                         Delete
                       </button>
