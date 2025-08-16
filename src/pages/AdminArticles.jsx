@@ -1,47 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "../components/api/axios";
+import InstituteForm from "../components/admin/InstituteForm";
 import { toast } from "react-toastify";
 import useDataStore from "../store/useDataStore";
-import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../components/admin/AdminNavbar";
 import { ShieldAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const AdminArticles = () => {
-  const [articles, setArticles] = useState([]);
-  const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    date: "",
-    category: "",
-    excerpt: "",
-    content: "",
-    thumbnail: "",
-    downloadUrl: "",
-  });
+const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [institutes, setInstitutes] = useState([]);
+  const [formData, setFormData] = useState({});
   const [editIndex, setEditIndex] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [openCourses, setOpenCourses] = useState({});
   const listRef = useRef(null);
   const { isAdmin } = useDataStore();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isAdmin) {
-      console.warn("Unauthorized access attempt to Admin Articles page.");
-    }
-  }, [isAdmin, navigate]);
-
-  useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const res = await axios.get("/articles");
-        setArticles(res.data.reverse());
-      } catch (err) {
-        toast.error("Failed to fetch articles");
-      }
-    };
-
-    fetchArticles();
-  }, []);
 
   if (!isAdmin) {
     return (
@@ -68,120 +41,66 @@ const AdminArticles = () => {
     );
   }
 
-  const uploadToCloudinary = async (file) => {
-    const data = new FormData();
-    data.append("file", file);
-    data.append("upload_preset", "curio_community");
-    data.append("cloud_name", "ddamnzrvc");
-
+  const fetchInstitutes = async () => {
     try {
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/ddamnzrvc/image/upload",
-        {
-          method: "POST",
-          body: data,
-        }
-      );
-      const result = await res.json();
-      return result.secure_url;
+      const res = await axios.get("/institutes");
+      setInstitutes(res.data.reverse());
     } catch (err) {
-      console.error("Cloudinary upload failed", err);
-      throw new Error("Image upload failed");
+      toast.error("Failed to fetch institutes");
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
+  const createInstitute = async (data) => {
     try {
-      let thumbnailUrl = formData.thumbnail;
-      if (typeof thumbnailUrl === "object") {
-        thumbnailUrl = await uploadToCloudinary(thumbnailUrl);
-      }
-
-      const payload = { ...formData, thumbnail: thumbnailUrl };
-
-      if (editIndex !== null) {
-        const id = articles[editIndex]._id;
-        const res = await axios.put(`/articles/${id}`, payload);
-        const updated = articles.map((item, idx) =>
-          idx === editIndex ? res.data.article : item
-        );
-        setArticles(updated);
-        toast.success("Article updated");
-      } else {
-        const res = await axios.post("/articles/admin/create", payload);
-        // console.log('New Article Created:', res.data);
-        setArticles((prev) => [res.data, ...prev]);
-        toast.success("Article added");
-      }
-
-      setFormData({
-        title: "",
-        author: "",
-        date: "",
-        category: "",
-        excerpt: "",
-        content: "",
-        thumbnail: "",
-        downloadUrl: "",
-      });
-      setEditIndex(null);
+      const res = await axios.post("/institutes", data);
+      setInstitutes((prev) => [res.data.form, ...prev]);
+      toast.success("Institute added");
+      setFormData({});
       scrollToList();
     } catch (err) {
-      toast.error("Error saving article");
-    } finally {
-      setLoading(false);
+      toast.error("Error adding institute");
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (files) {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleEdit = (index) => {
-    setFormData(articles[index]);
-    setEditIndex(index);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const categories = [
-    "all",
-    "Exams",
-    "Tips",
-    "Courses",
-    "Trends",
-    "Scholarships",
-  ];
-
-  const cancelEdit = () => {
-    setFormData({
-      title: "",
-      author: "",
-      date: "",
-      category: "",
-      excerpt: "",
-      content: "",
-      thumbnail: "",
-      downloadUrl: "",
-    });
-    setEditIndex(null);
-  };
-
-  const deleteArticle = async (id) => {
+  const updateInstitute = async (id, data) => {
     try {
-      await axios.delete(`/articles/admin/${id}`);
-      setArticles(articles.filter((a) => a._id !== id));
+      const res = await axios.put(`/institutes/${id}`, data);
+      const updated = institutes.map((item) =>
+        item._id === id ? res.data.institute : item
+      );
+      setInstitutes(updated);
+      setEditIndex(null);
+      setFormData({});
+      toast.success("Institute updated");
+      scrollToList();
+    } catch (err) {
+      toast.error("Error updating institute");
+    }
+  };
+
+  const deleteInstitute = async (id) => {
+    try {
+      await axios.delete(`/institutes/${id}`);
+      setInstitutes(institutes.filter((i) => i._id !== id));
       toast.success("Deleted");
     } catch (err) {
       toast.error("Failed to delete");
     }
+  };
+
+  const handleEdit = (index) => {
+    setFormData(institutes[index]);
+    setEditIndex(index);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    setFormData({});
+    setEditIndex(null);
+  };
+
+  const toggleCourses = (id) => {
+    setOpenCourses((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const scrollToList = () => {
@@ -190,188 +109,104 @@ const AdminArticles = () => {
     }, 300);
   };
 
+  useEffect(() => {
+    fetchInstitutes();
+  }, []);
+
   return (
     <>
       <AdminNavbar />
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 py-10 px-2 md:px-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-extrabold text-blue-900 mb-10 text-center drop-shadow-lg tracking-tight">
-            Admin Dashboard <span className="text-blue-600">– Articles</span>
+            <span role="img" aria-label="cap">
+              🎓
+            </span>{" "}
+            Admin Dashboard <span className="text-blue-600">– Institutes</span>
           </h1>
 
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 space-y-6 max-w-2xl mx-auto mb-12"
-          >
-            {/* Title */}
-            <input
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="Article Title"
-              className="w-full p-2 border rounded"
-              required
+          {/* Form */}
+          <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
+            <InstituteForm
+              formData={formData}
+              setFormData={setFormData}
+              editIndex={editIndex}
+              createInstitute={createInstitute}
+              updateInstitute={updateInstitute}
+              cancelEdit={cancelEdit}
             />
+          </div>
 
-            {/* Author */}
-            <input
-              name="author"
-              value={formData.author}
-              onChange={handleChange}
-              placeholder="Author Name"
-              className="w-full p-2 border rounded"
-              required
-            />
-
-            {/* Date */}
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-
-            {/* Category */}
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="">Select Category</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-
-            {/* Excerpt */}
-            <textarea
-              name="excerpt"
-              value={formData.excerpt}
-              onChange={handleChange}
-              placeholder="Short Excerpt / Summary"
-              className="w-full p-2 border rounded"
-              rows={3}
-              required
-            />
-
-            {/* Content */}
-            <textarea
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              placeholder="Full Article Content"
-              className="w-full p-2 border rounded"
-              rows={6}
-              required
-            />
-
-            {/* Thumbnail */}
-            {editIndex !== null && typeof formData.thumbnail === "string" && (
-              <div>
-                <img
-                  src={formData?.thumbnail}
-                  alt="Current Thumbnail"
-                  className="w-40 h-24 object-cover rounded mb-2"
-                />
-              </div>
-            )}
-            <input
-              name="thumbnail"
-              type="file"
-              accept="image/*"
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              {...(editIndex === null && { required: true })}
-            />
-
-            {/* Download URL */}
-            <input
-              type="url"
-              name="downloadUrl"
-              value={formData.downloadUrl}
-              onChange={handleChange}
-              placeholder="Download URL (optional)"
-              className="w-full p-2 border rounded"
-            />
-
-            {/* Buttons */}
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                {loading
-                  ? "Submitting..."
-                  : editIndex !== null
-                  ? "Update Article"
-                  : "Add Article"}
-              </button>
-              {editIndex !== null && (
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="bg-gray-400 text-white px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-
+          {/* List */}
           <div ref={listRef} className="mt-16">
-            <h2 className="text-3xl font-bold text-blue-800 mb-8 border-b-2 border-blue-200 pb-2 text-center tracking-tight">
-              Articles List
+            <h2 className="text-3xl font-bold text-blue-800 mb-8 border-b-2 border-blue-200 pb-2 text-center tracking-tight flex items-center justify-center gap-2">
+              <span role="img" aria-label="list">
+                📋
+              </span>{" "}
+              Institutes List
             </h2>
 
-            {articles.length === 0 ? (
+            {institutes.length === 0 ? (
               <p className="text-center text-gray-500 italic">
-                No articles yet.
+                No institutes added yet.
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-                {articles.map((article, index) => (
+                {institutes.map((inst, index) => (
                   <div
-                    key={article._id}
-                    className="bg-white rounded-[2rem] shadow-xl border border-blue-200 p-7 flex flex-col justify-between h-full transition-all duration-200 hover:shadow-2xl hover:-translate-y-1"
+                    key={inst._id}
+                    className="bg-white rounded-[2rem] shadow-xl border border-blue-200 p-7 flex flex-col justify-between h-full min-h-[430px] transition-all duration-200 hover:shadow-2xl hover:-translate-y-1"
                   >
-                    <div className="space-y-3">
-                      <img
-                        src={
-                          article.thumbnail ||
-                          "https://via.placeholder.com/400x200"
-                        }
-                        alt={article.title}
-                        className="w-full h-44 object-cover rounded-xl border border-blue-100 shadow-sm"
-                      />
+                    <div className="flex flex-col gap-3">
                       <h3 className="text-xl font-bold text-blue-900 truncate">
-                        {article.title}
+                        {inst.name}
                       </h3>
-                      <p className="text-sm text-gray-600 italic">
-                        By {article.author} — {article.date}
+                      <p className="text-gray-700">
+                        <strong>📍 City:</strong> {inst.location?.city},{" "}
+                        {inst.location?.state}
                       </p>
-                      <p className="text-gray-700 text-base line-clamp-3">
-                        {article.excerpt}
+                      <p className="text-gray-700">
+                        <strong>🏢 Address:</strong> {inst.location?.address}
                       </p>
-                      <p className="text-xs text-blue-600 font-semibold">
-                        Category: {article.category}
-                      </p>
-
-                      {article.downloadUrl && (
+                      {inst.affilication && (
+                        <p className="text-gray-700">
+                          <strong>🏛️ Affiliation:</strong> {inst.affilication}
+                        </p>
+                      )}
+                      {inst.website && (
                         <a
-                          href={article.downloadUrl}
+                          href={inst.website}
                           target="_blank"
                           rel="noreferrer"
                           className="text-blue-700 underline text-sm font-medium hover:text-blue-900"
                         >
-                          Download / Visit
+                          🌐 Visit Website
                         </a>
+                      )}
+
+                      {inst.courses?.length > 0 && (
+                        <div className="mt-3">
+                          <button
+                            onClick={() => toggleCourses(inst._id)}
+                            className="text-blue-700 font-medium underline text-sm hover:text-blue-900"
+                          >
+                            {openCourses[inst._id]
+                              ? "Hide Courses"
+                              : "View Courses"}
+                          </button>
+
+                          {openCourses[inst._id] && (
+                            <ul className="mt-2 list-disc list-inside text-gray-700 text-sm space-y-1">
+                              {inst.courses.map((course, idx) => (
+                                <li key={idx}>
+                                  <strong>{course.name}</strong> —{" "}
+                                  {course.duration}, ₹{course.fees},{" "}
+                                  {course.seats} seats, {course.finance_type}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -380,12 +215,18 @@ const AdminArticles = () => {
                         onClick={() => handleEdit(index)}
                         className="bg-yellow-500 hover:bg-yellow-600 text-white text-base px-6 py-2 rounded-xl shadow transition flex items-center gap-2 font-semibold"
                       >
+                        <span role="img" aria-label="edit">
+                          ✏️
+                        </span>{" "}
                         Edit
                       </button>
                       <button
-                        onClick={() => deleteArticle(article._id)}
+                        onClick={() => deleteInstitute(inst._id)}
                         className="bg-red-600 hover:bg-red-700 text-white text-base px-6 py-2 rounded-xl shadow transition flex items-center gap-2 font-semibold"
                       >
+                        <span role="img" aria-label="delete">
+                          🗑️
+                        </span>{" "}
                         Delete
                       </button>
                     </div>
@@ -400,4 +241,4 @@ const AdminArticles = () => {
   );
 };
 
-export default AdminArticles;
+export default AdminDashboard;
