@@ -21,7 +21,7 @@ export default function Adminlogin() {
       const res = await axios.post("/auth/login", credentials);
       alert(res.data.message);
       adminLogin();
-      navigate("/admin/institute");
+      navigate("/admin/dashboard");
     } catch (err) {
       console.error(err);
       setError("Invalid email or password.");
