@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef,useEffect } from "react";
 import useDataStore from "../store/useDataStore";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -13,79 +13,212 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
-const stats = [
+// Skeletons for loading
+const skeletonStats = [
   {
     label: "Total Institutes",
-    value: 24,
+    value: null,
     icon: AcademicCapIcon,
     desc: "Registered institutes",
     color: "bg-blue-100 text-blue-700",
+    loading: true,
   },
   {
     label: "Total Courses",
-    value: 120,
+    value: null,
     icon: BookOpenIcon,
     desc: "Available courses",
     color: "bg-green-100 text-green-700",
+    loading: true,
   },
   {
     label: "Total Merits",
-    value: 18,
+    value: null,
     icon: DocumentTextIcon,
     desc: "Published merit lists",
     color: "bg-yellow-100 text-yellow-700",
+    loading: true,
   },
   {
     label: "Total Articles",
-    value: 56,
+    value: null,
     icon: NewspaperIcon,
     desc: "Published articles",
     color: "bg-pink-100 text-pink-700",
+    loading: true,
   },
 ];
 
-const institutes = ["IIT Delhi", "IIM Ahmedabad", "NIT Surat", "NIPER Mohali"];
+const iconMap = {
+  "Total Institutes": AcademicCapIcon,
+  "Total Courses": BookOpenIcon,
+  "Total Merits": DocumentTextIcon,
+  "Total Articles": NewspaperIcon,
+};
+
+const colorMap = {
+  "Total Institutes": "bg-blue-100 text-blue-700",
+  "Total Courses": "bg-green-100 text-green-700",
+  "Total Merits": "bg-yellow-100 text-yellow-700",
+  "Total Articles": "bg-pink-100 text-pink-700",
+};
+
+
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState(skeletonStats);
   const { isAdmin } = useDataStore();
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    institute: "",
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-  });
   const [uploading, setUploading] = useState(false);
   const [uploadSummary, setUploadSummary] = useState(null);
   const [subAdmins, setSubAdmins] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const formRef = useRef(null);
 
-  // Handlers
+  const [institutes, setInstitutes] = useState([]);
+  const [form, setForm] = useState({
+    institute: "",
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    permissions: {
+      manageCourses: false,
+      manageInstituteDetails: false,
+      addArticles: false,
+      addMeritLists: false,
+    },
+  });
+
+
+  // Fetch institutes for dropdown
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_BASE_URL}/institutes`)
+      .then((res) => res.json())
+      .then((data) => {console.log(data); setInstitutes(data)})
+      .catch(() => toast.error("Failed to fetch institutes"));
+  }, []);
+
+  // Form handlers
   const handleFormChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    if (
+      name === "manageCourses" ||
+      name === "manageInstituteDetails" ||
+      name === "addArticles" ||
+      name === "addMeritLists"
+    ) {
+      setForm({
+        ...form,
+        permissions: {
+          ...form.permissions,
+          [name]: checked,
+        },
+      });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (editIndex !== null) {
-      const updated = [...subAdmins];
-      updated[editIndex] = { ...form, status: "Active" };
-      setSubAdmins(updated);
-      toast.success("Sub-admin updated successfully");
-    } else {
-      setSubAdmins([...subAdmins, { ...form, status: "Active" }]);
-      toast.success("Sub-admin created successfully");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          institute: form.institute,
+          permissions: form.permissions,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Sub-admin created successfully");
+        setForm({
+          institute: "",
+          name: "",
+          email: "",
+          phone: "",
+          password: "",
+          permissions: {
+            manageCourses: false,
+            manageInstituteDetails: false,
+            addArticles: false,
+            addMeritLists: false,
+          },
+        });
+        setEditIndex(null);
+      } else {
+        toast.error(data.error || "Failed to create sub-admin");
+      }
+    } catch {
+      toast.error("Server error");
     }
-    setForm({ institute: "", name: "", email: "", phone: "", password: "" });
-    setEditIndex(null);
   };
 
   const handleFormReset = () => {
-    setForm({ institute: "", name: "", email: "", phone: "", password: "" });
+    setForm({
+      institute: "",
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      permissions: {
+        manageCourses: false,
+        manageInstituteDetails: false,
+        addArticles: false,
+        addMeritLists: false,
+      },
+    });
     setEditIndex(null);
   };
+
+  
+
+    useEffect(() => {
+    fetch(`${import.meta.env.VITE_BASE_URL}/auth/stats/counts`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Map backend response to frontend stats format
+        setStats([
+          {
+            label: "Total Institutes",
+            value: data.institutes,
+            icon: AcademicCapIcon,
+            desc: "Registered institutes",
+            color: "bg-blue-100 text-blue-700",
+          },
+          {
+            label: "Total Courses",
+            value: data.manageCourses,
+            icon: BookOpenIcon,
+            desc: "Available courses",
+            color: "bg-green-100 text-green-700",
+          },
+          {
+            label: "Total Merits",
+            value: data.merits,
+            icon: DocumentTextIcon,
+            desc: "Published merit lists",
+            color: "bg-yellow-100 text-yellow-700",
+          },
+          {
+            label: "Total Articles",
+            value: data.articles,
+            icon: NewspaperIcon,
+            desc: "Published articles",
+            color: "bg-pink-100 text-pink-700",
+          },
+        ]);
+      })
+      .catch(() => {
+        toast.error("Failed to fetch stats");
+      });
+  }, []);
+
 
   const handleFileUpload = (e) => {
     setUploading(true);
@@ -164,13 +297,20 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto">
           {/* Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            {stats.map((stat) => (
+            {stats.map((stat, idx) => (
               <div
                 key={stat.label}
                 className={`rounded-2xl shadow-lg p-6 flex flex-col items-center ${stat.color}`}
               >
                 <stat.icon className="w-10 h-10 mb-2" />
-                <div className="text-3xl font-extrabold mb-1">{stat.value}</div>
+                <div className="text-3xl font-extrabold mb-1">
+                  {stat.value !== null
+                    ? stat.value
+                    : (
+                      <span className="animate-pulse bg-gray-300 rounded w-16 h-8 inline-block"></span>
+                    )
+                  }
+                </div>
                 <div className="font-semibold text-lg mb-1">{stat.label}</div>
                 <div className="text-sm text-gray-600">{stat.desc}</div>
               </div>
@@ -178,103 +318,151 @@ export default function AdminDashboard() {
           </div>
 
           {/* Add Sub-Admin Form */}
-          <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
-              Add Sub-Admin
-            </h2>
-            <form
-              ref={formRef}
-              className="space-y-5"
-              onSubmit={handleFormSubmit}
-            >
-              <div>
-                <label className="block font-medium text-blue-700 mb-1">
-                  Institute
-                </label>
-                <select
-                  name="institute"
-                  value={form.institute}
-                  onChange={handleFormChange}
-                  required
-                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-                >
-                  <option value="">Select Institute</option>
-                  {institutes.map((inst) => (
-                    <option key={inst} value={inst}>
-                      {inst}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block font-medium text-blue-700 mb-1">
-                  Name
-                </label>
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleFormChange}
-                  required
-                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-                  placeholder="Full Name"
-                />
-              </div>
-              <div>
-                <label className="block font-medium text-blue-700 mb-1">
-                  Email
-                </label>
-                <input
-                  name="email"
-                  value={form.email}
-                  onChange={handleFormChange}
-                  required
-                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-                  placeholder="Email Address"
-                />
-              </div>
-              <div>
-                <label className="block font-medium text-blue-700 mb-1">
-                  Phone (Optional)
-                </label>
-                <input
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleFormChange}
-                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-                  placeholder="Phone Number"
-                />
-              </div>
-              <div>
-                <label className="block font-medium text-blue-700 mb-1">
-                  Password
-                </label>
-                <input
-                  name="password"
-                  value={form.password}
-                  onChange={handleFormChange}
-                  required
-                  type="password"
-                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-                  placeholder="Password"
-                />
-              </div>
-              <div className="flex gap-4 justify-end mt-2">
-                <button
-                  type="submit"
-                  className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
-                >
-                  {editIndex !== null ? "Update Sub-Admin" : "Create Sub-Admin"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleFormReset}
-                  className="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
-                >
-                  Reset
-                </button>
-              </div>
-            </form>
+              <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
+      <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
+        Add Sub-Admin
+      </h2>
+      <form
+        ref={formRef}
+        className="space-y-5"
+        onSubmit={handleFormSubmit}
+      >
+        <div>
+          <label className="block font-medium text-blue-700 mb-1">
+            Institute
+          </label>
+          <select
+            name="institute"
+            value={form.institute}
+            onChange={handleFormChange}
+            required
+            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="">Select Institute</option>
+            {institutes?.map((inst) => (
+              <option key={inst._id} value={inst._id}>
+                {inst.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block font-medium text-blue-700 mb-1">
+            Name
+          </label>
+          <input
+            name="name"
+            value={form.name}
+            onChange={handleFormChange}
+            required
+            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+            placeholder="Full Name"
+          />
+        </div>
+        <div>
+          <label className="block font-medium text-blue-700 mb-1">
+            Email
+          </label>
+          <input
+            name="email"
+            value={form.email}
+            onChange={handleFormChange}
+            required
+            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+            placeholder="Email Address"
+          />
+        </div>
+        <div>
+          <label className="block font-medium text-blue-700 mb-1">
+            Phone (Optional)
+          </label>
+          <input
+            name="phone"
+            value={form.phone}
+            onChange={handleFormChange}
+            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+            placeholder="Phone Number"
+          />
+        </div>
+        <div>
+          <label className="block font-medium text-blue-700 mb-1">
+            Password
+          </label>
+          <input
+            name="password"
+            value={form.password}
+            onChange={handleFormChange}
+            required
+            type="password"
+            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+            placeholder="Password"
+          />
+        </div>
+        {/* Permissions checkboxes */}
+        <div>
+          <label className="block font-medium text-blue-700 mb-2">
+            Permissions
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label>
+              <input
+                type="checkbox"
+                name="manageCourses"
+                checked={form.permissions.manageCourses}
+                onChange={handleFormChange}
+                className="mr-2"
+              />
+              Manage Courses
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="manageInstituteDetails"
+                checked={form.permissions.manageInstituteDetails}
+                onChange={handleFormChange}
+                className="mr-2"
+              />
+              Manage Institute Details
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="addArticles"
+                checked={form.permissions.addArticles}
+                onChange={handleFormChange}
+                className="mr-2"
+              />
+              Add Articles
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="addMeritLists"
+                checked={form.permissions.addMeritLists}
+                onChange={handleFormChange}
+                className="mr-2"
+              />
+              Add Merit Lists
+            </label>
           </div>
+        </div>
+        <div className="flex gap-4 justify-end mt-2">
+          <button
+            type="submit"
+            className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
+          >
+            {editIndex !== null ? "Update Sub-Admin" : "Create Sub-Admin"}
+          </button>
+          <button
+            type="button"
+            onClick={handleFormReset}
+            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
+          >
+            Reset
+          </button>
+        </div>
+      </form>
+    </div>
 
           {/* Bulk Upload Section */}
           <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
