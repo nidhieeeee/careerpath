@@ -3,6 +3,8 @@ import useDataStore from "../store/useDataStore";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import AdminNavbar from "../components/admin/AdminNavbar";
+import * as XLSX from "xlsx";
+
 import {
   AcademicCapIcon,
   BookOpenIcon,
@@ -220,21 +222,66 @@ export default function AdminDashboard() {
   }, []);
 
 
-  const handleFileUpload = (e) => {
-    setUploading(true);
-    // simulate processing
-    setTimeout(() => {
-      setUploading(false);
-      setUploadSummary({
-        success: 10,
-        failed: 2,
-        errors: [
-          { row: 3, error: "Invalid email" },
-          { row: 7, error: "Missing name" },
-        ],
-      });
-    }, 2000);
-  };
+const handleFileUpload = async (e) => {
+  try {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Convert to JSON
+    const parsedData = XLSX.utils.sheet_to_json(worksheet);
+    console.log("Parsed Excel Data:", parsedData); // Debugging
+
+    // Format rows
+    const formatted = parsedData.map((row) => {
+      const subAdmin = {
+        name: row["subAdminName"] || "",
+        email: row["subAdminEmail"] || "",
+        institute: row["instituteName"] || "",
+      };
+
+      // Handle permissions
+      const permissions = {};
+      if ("manageCourses" in row) {
+        permissions.manageCourses =
+          row["manageCourses"] === true ||
+          row["manageCourses"]?.toString().toLowerCase() === "true";
+      }
+      if ("manageInstituteDetails" in row) {
+        permissions.manageInstituteDetails =
+          row["manageInstituteDetails"] === true ||
+          row["manageInstituteDetails"]?.toString().toLowerCase() === "true";
+      }
+      if ("addArticles" in row) {
+        permissions.addArticles =
+          row["addArticles"] === true ||
+          row["addArticles"]?.toString().toLowerCase() === "true";
+      }
+      if ("addMeritLists" in row) {
+        permissions.addMeritLists =
+          row["addMeritLists"] === true ||
+          row["addMeritLists"]?.toString().toLowerCase() === "true";
+      }
+
+      if (Object.keys(permissions).length > 0) {
+        subAdmin.permissions = permissions;
+      }
+      console.log(subAdmin)
+      return subAdmin;
+    });
+    // You may want to setSubAdmins or handle the formatted data here
+    setSubAdmins(formatted);
+    toast.success("File uploaded and parsed successfully!");
+  } catch (error) {
+    toast.error("Failed to upload or parse file");
+    console.error(error);
+  }
+};
+
 
   const handleEdit = (idx) => {
     setForm(subAdmins[idx]);
@@ -541,7 +588,7 @@ export default function AdminDashboard() {
                     Institute
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
-                    Status
+                    Permissions
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
                     Actions
@@ -559,7 +606,7 @@ export default function AdminDashboard() {
                       {admin.institute}
                     </td>
                     <td className="px-4 py-2 text-green-700 font-semibold">
-                      {admin.status}
+                      {admin.permissions.manageCourses}
                     </td>
                     <td className="px-4 py-2 flex gap-2">
                       <button
