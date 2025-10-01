@@ -1,6 +1,6 @@
 // store/useDataStore.js
-import { create } from 'zustand';
-import axios from 'axios';
+import { create } from "zustand";
+import axios from "axios";
 
 const useDataStore = create((set) => ({
   courses: [],
@@ -8,8 +8,10 @@ const useDataStore = create((set) => ({
   articles: [],
   loading: false,
   error: null,
-  isAdmin: false,
+  isLoggedIn: false,
+  role: null, // "super" | "sub" | null
 
+  // Fetch all public data
   fetchAllData: async () => {
     set({ loading: true, error: null });
     try {
@@ -18,10 +20,6 @@ const useDataStore = create((set) => ({
         axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`),
         axios.get(`${import.meta.env.VITE_BASE_URL}/articles`),
       ]);
-
-      console.log("Courses API Response:", coursesRes.data);
-      console.log("Institutes API Response:", institutesRes.data);
-      console.log("Articles API Response:", articlesRes.data);
 
       set({
         courses: Array.isArray(coursesRes.data) ? coursesRes.data : [],
@@ -39,7 +37,6 @@ const useDataStore = create((set) => ({
     set({ loading: true });
     try {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`);
-      console.log("Institutes API Response:", res.data);
       set({
         institutes: Array.isArray(res.data) ? res.data : [],
         loading: false,
@@ -54,7 +51,6 @@ const useDataStore = create((set) => ({
     set({ loading: true });
     try {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/courses`);
-      console.log("Courses API Response:", res.data);
       set({
         courses: Array.isArray(res.data) ? res.data : [],
         loading: false,
@@ -65,8 +61,29 @@ const useDataStore = create((set) => ({
     }
   },
 
-  adminLogin: () => {
-    set({ isAdmin: true });
+  // Login → save token + role in localStorage
+  login: (token, role) => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role);
+    set({ isLoggedIn: true, role });
+  },
+
+  // Logout → clear everything
+  logout: () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    set({ isLoggedIn: false, role: null });
+  },
+
+  // Initialize state from localStorage (call once on app load)
+  initializeAuth: () => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    if (token && role) {
+      set({ isLoggedIn: true, role });
+    } else {
+      set({ isLoggedIn: false, role: null });
+    }
   },
 }));
 

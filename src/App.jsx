@@ -49,6 +49,12 @@ const ScrollToTop = () => {
 const App = () => {
   const isMobile = window.innerWidth < 768;
 
+    const initializeAuth = useDataStore((state) => state.initializeAuth);
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
   const LayoutWrapper = ({ children }) =>
     isMobile ? (
       <MobileLayout>{children}</MobileLayout>

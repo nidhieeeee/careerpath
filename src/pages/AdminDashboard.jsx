@@ -101,6 +101,14 @@ export default function AdminDashboard() {
       .catch(() => toast.error("Failed to fetch institutes"));
   }, []);
 
+  useEffect(() => {
+  fetch(`${import.meta.env.VITE_BASE_URL}/auth/subadmins`)
+    .then((res) => res.json())
+    .then((data) => setSubAdmins(data))
+    .catch(() => toast.error("Failed to fetch sub-admins"));
+}, []);
+
+
   // Form handlers
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -281,6 +289,44 @@ const handleFileUpload = async (e) => {
     console.error(error);
   }
 };
+
+const handleBulkSubmit = async () => {
+  if (subAdmins.length === 0) {
+    toast.error("No sub-admins to upload");
+    return;
+  }
+
+  setUploading(true);
+  try {
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/subadmin/bulk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subAdmins }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      toast.success("Bulk upload processed successfully");
+      setUploadSummary({
+        success: data.created.length,
+        failed: data.skipped.length,
+        errors: data.skipped.map((s, idx) => ({
+          row: idx + 1,
+          error: s.reason,
+        })),
+      });
+      setSubAdmins([]); // clear after upload
+    } else {
+      toast.error(data.error || "Bulk upload failed");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Server error during bulk upload");
+  } finally {
+    setUploading(false);
+  }
+};
+
 
 
   const handleEdit = (idx) => {
@@ -568,6 +614,14 @@ const handleFileUpload = async (e) => {
                 </div>
               )}
             </div>
+
+            <button
+              onClick={handleBulkSubmit}
+              disabled={uploading || subAdmins.length === 0}
+              className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
+            >
+              {uploading ? "Uploading..." : "Submit Bulk Upload"}
+            </button>
           </div>
 
           {/* Sub-Admins Table */}
@@ -591,42 +645,30 @@ const handleFileUpload = async (e) => {
                     Permissions
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
-                    Actions
+                    Auto Password
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {subAdmins.map((admin, idx) => (
+                {subAdmins?.map((admin, idx) => (
                   <tr key={idx} className="hover:bg-blue-50">
-                    <td className="px-4 py-2 font-medium text-gray-800">
-                      {admin.name}
-                    </td>
+                    <td className="px-4 py-2 font-medium text-gray-800">{admin.name}</td>
                     <td className="px-4 py-2 text-gray-700">{admin.email}</td>
+                    <td className="px-4 py-2 text-gray-700">{admin.institute}</td>
                     <td className="px-4 py-2 text-gray-700">
-                      {admin.institute}
+                      {Object.entries(admin.permissions)
+                        .filter(([_, v]) => v)
+                        .map(([k]) => k)
+                        .join(", ") || "None"}
                     </td>
-                    <td className="px-4 py-2 text-green-700 font-semibold">
-                      {admin.permissions.manageCourses}
-                    </td>
-                    <td className="px-4 py-2 flex gap-2">
-                      <button
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded shadow flex items-center gap-1"
-                        onClick={() => handleEdit(idx)}
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                        Edit
-                      </button>
-                      <button
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow flex items-center gap-1"
-                        onClick={() => handleDelete(idx)}
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                        Delete
-                      </button>
+                    <td className="px-4 py-2 text-gray-700">{admin.autoPassword}</td>
+                    <td className="px-4 py-2">
+                      {/* Your edit/delete buttons */}
                     </td>
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
         </div>
