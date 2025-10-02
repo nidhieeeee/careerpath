@@ -1,41 +1,57 @@
-// components/admin/InstituteForm.jsx
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 
-const InstituteForm = ({
-  formData,
-  setFormData,
-  editIndex,
-  createInstitute,
-  updateInstitute,
-  cancelEdit,
-}) => {
+// A default empty state to initialize the form
+const initialFormState = {
+  name: '',
+  imageUrl: '',
+  website: '',
+  affilication: '',
+  location: { city: '', state: '', address: '' },
+  courses: [],
+  isTopInstitute: false,
+};
+
+const InstituteForm = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
+  const [formData, setFormData] = useState(initialFormState);
+
+  // This effect syncs the form's state with the data passed from the parent.
+  // It runs when the modal opens or the `initialData` changes.
+  useEffect(() => {
+    if (initialData) {
+      // If we are editing, pre-fill the form with existing data
+      setFormData({ ...initialFormState, ...initialData });
+    } else {
+      // If we are adding a new institute, reset to the empty state
+      setFormData(initialFormState);
+    }
+  }, [initialData]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    const finalValue = type === 'checkbox' ? checked : value;
 
-    if (name.includes('location.')) {
-      const [_, key] = name.split('.');
+    if (name.includes('.')) {
+      const [parentKey, childKey] = name.split('.');
       setFormData((prev) => ({
         ...prev,
-        location: {
-          ...prev.location,
-          [key]: value,
+        [parentKey]: {
+          ...prev[parentKey],
+          [childKey]: finalValue,
         },
       }));
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]: value,
+        [name]: finalValue,
       }));
     }
   };
 
   const handleCourseChange = (index, field, value) => {
-    const updatedCourses = [...(formData.courses || [])];
-    updatedCourses[index][field] = value;
-    setFormData((prev) => ({
-      ...prev,
-      courses: updatedCourses,
-    }));
+    const updatedCourses = [...formData.courses];
+    updatedCourses[index] = { ...updatedCourses[index], [field]: value };
+    setFormData((prev) => ({ ...prev, courses: updatedCourses }));
   };
 
   const addCourse = () => {
@@ -46,184 +62,79 @@ const InstituteForm = ({
   };
 
   const removeCourse = (index) => {
-    const updatedCourses = [...(formData.courses || [])];
-    updatedCourses.splice(index, 1);
     setFormData((prev) => ({
       ...prev,
-      courses: updatedCourses,
+      courses: prev.courses.filter((_, i) => i !== index),
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (editIndex !== null) {
-      updateInstitute(formData._id, formData);
-    } else {
-      createInstitute(formData);
-    }
-    setFormData({});
+    // Pass the form's current state up to the parent to handle saving
+    onSubmit(formData);
   };
 
-  useEffect(() => {
-    // ensure structure
-    if (!formData.location) {
-      setFormData((prev) => ({ ...prev, location: {} }));
-    }
-    if (!formData.courses) {
-      setFormData((prev) => ({ ...prev, courses: [] }));
-    }
-  }, []);
+  const isEditMode = !!initialData;
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">{editIndex !== null ? 'Edit' : 'Add'} Institute</h2>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Institute Basic Info in a grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input name="name" placeholder="Institute Name" value={formData.name} onChange={handleChange} required className="p-2 border rounded" />
+        <input name="imageUrl" placeholder="Image URL" value={formData.imageUrl} onChange={handleChange} className="p-2 border rounded" />
+        <input name="location.city" placeholder="City" value={formData.location?.city || ''} onChange={handleChange} required className="p-2 border rounded" />
+        <input name="location.state" placeholder="State" value={formData.location?.state || ''} onChange={handleChange} className="p-2 border rounded" />
+        <input name="location.address" placeholder="Address" value={formData.location?.address || ''} onChange={handleChange} required className="p-2 border rounded md:col-span-2" />
+        <input name="website" placeholder="Website URL" value={formData.website} onChange={handleChange} className="p-2 border rounded" />
+        <input name="affilication" placeholder="Affiliation" value={formData.affilication} onChange={handleChange} className="p-2 border rounded" />
+      </div>
 
-      {/* Institute Basic Info */}
-      <input
-        type="text"
-        name="name"
-        placeholder="Institute Name"
-        value={formData.name || ''}
-        onChange={handleChange}
-        className="block w-full border border-gray-300 p-2 mb-3 rounded"
-        required
-      />
-
-      <input
-        type="text"
-        name="imageUrl"
-        placeholder="Image URL"
-        value={formData.imageUrl || ''}
-        onChange={handleChange}
-        className="block w-full border border-gray-300 p-2 mb-3 rounded"
-      />
-
-      <input
-        type="text"
-        name="location.city"
-        placeholder="City"
-        value={formData.location?.city || ''}
-        onChange={handleChange}
-        className="block w-full border border-gray-300 p-2 mb-3 rounded"
-        required
-      />
-
-      <input
-        type="text"
-        name="location.state"
-        placeholder="State"
-        value={formData.location?.state || ''}
-        onChange={handleChange}
-        className="block w-full border border-gray-300 p-2 mb-3 rounded"
-      />
-
-      <input
-        type="text"
-        name="location.address"
-        placeholder="Address"
-        value={formData.location?.address || ''}
-        onChange={handleChange}
-        className="block w-full border border-gray-300 p-2 mb-3 rounded"
-        required
-      />
-
-      <input
-        type="text"
-        name="website"
-        placeholder="Website"
-        value={formData.website || ''}
-        onChange={handleChange}
-        className="block w-full border border-gray-300 p-2 mb-3 rounded"
-      />
-
-      <input
-        type="text"
-        name="affilication"
-        placeholder="Affiliation"
-        value={formData.affilication || ''}
-        onChange={handleChange}
-        className="block w-full border border-gray-300 p-2 mb-3 rounded"
-      />
+       {/* Top Institute Toggle */}
+       <div className="flex items-center gap-3 bg-indigo-50 p-3 rounded-lg">
+          <input type="checkbox" id="isTopInstitute" name="isTopInstitute" checked={formData.isTopInstitute || false} onChange={handleChange} className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500" />
+          <label htmlFor="isTopInstitute" className="font-medium text-gray-700">Mark as Top Institute</label>
+       </div>
 
       {/* Courses Section */}
-      <div className="mt-6">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-xl font-semibold">Courses</h3>
-          <button
-            type="button"
-            onClick={addCourse}
-            className="text-sm bg-green-600 text-white px-3 py-1 rounded"
-          >
+      <div>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-xl font-semibold text-gray-700">Courses</h3>
+          <button type="button" onClick={addCourse} className="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md font-semibold">
             + Add Course
           </button>
         </div>
-
-        {(formData.courses || []).map((course, idx) => (
-          <div key={idx} className="border p-4 rounded mb-4 space-y-2 bg-gray-50">
-            <input
-              type="text"
-              placeholder="Course Name"
-              value={course.name || ''}
-              onChange={(e) => handleCourseChange(idx, 'name', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Duration"
-              value={course.duration || ''}
-              onChange={(e) => handleCourseChange(idx, 'duration', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-            <input
-              type="number"
-              placeholder="Fees"
-              value={course.fees || ''}
-              onChange={(e) => handleCourseChange(idx, 'fees', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-            <input
-              type="number"
-              placeholder="Seats"
-              value={course.seats || ''}
-              onChange={(e) => handleCourseChange(idx, 'seats', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-            />
-            <select
-              value={course.finance_type || 'self'}
-              onChange={(e) => handleCourseChange(idx, 'finance_type', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              <option value="self">Self Finance</option>
-              <option value="government">Government</option>
-              <option value="aided">Aided</option>
-            </select>
-            <button
-              type="button"
-              onClick={() => removeCourse(idx)}
-              className="text-sm text-red-600 mt-2 underline"
-            >
-              Remove Course
-            </button>
-          </div>
-        ))}
+        <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
+          {(formData.courses || []).map((course, idx) => (
+            <div key={idx} className="border p-4 rounded-lg bg-gray-50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input placeholder="Course Name" value={course.name} onChange={(e) => handleCourseChange(idx, 'name', e.target.value)} required className="p-2 border rounded" />
+                    <input placeholder="Duration" value={course.duration} onChange={(e) => handleCourseChange(idx, 'duration', e.target.value)} required className="p-2 border rounded" />
+                    <input type="number" placeholder="Fees" value={course.fees} onChange={(e) => handleCourseChange(idx, 'fees', e.target.value)} className="p-2 border rounded" />
+                    <input type="number" placeholder="Seats" value={course.seats} onChange={(e) => handleCourseChange(idx, 'seats', e.target.value)} className="p-2 border rounded" />
+                    <select value={course.finance_type} onChange={(e) => handleCourseChange(idx, 'finance_type', e.target.value)} className="p-2 border rounded md:col-span-2">
+                        <option value="self">Self Finance</option>
+                        <option value="government">Government</option>
+                        <option value="aided">Aided</option>
+                    </select>
+                </div>
+                <div className="text-right mt-2">
+                    <button type="button" onClick={() => removeCourse(idx)} className="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center gap-1 ml-auto">
+                        <Trash2 size={14} /> Remove
+                    </button>
+                </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Submit Buttons */}
-      <div className="flex gap-4 mt-4">
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-          {editIndex !== null ? 'Update' : 'Create'}
+      <div className="flex gap-4 pt-4 border-t">
+        <button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-lg disabled:bg-indigo-400">
+          {isSubmitting ? 'Saving...' : (isEditMode ? 'Update Institute' : 'Create Institute')}
         </button>
-        {editIndex !== null && (
-          <button
-            type="button"
-            onClick={cancelEdit}
-            className="bg-gray-400 text-white px-4 py-2 rounded"
-          >
-            Cancel
-          </button>
-        )}
+        <button type="button" onClick={onCancel} disabled={isSubmitting} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-6 py-2 rounded-lg">
+          Cancel
+        </button>
       </div>
     </form>
   );

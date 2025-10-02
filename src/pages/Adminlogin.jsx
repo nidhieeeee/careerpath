@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../components/api/axios"; 
+import { toast } from "react-toastify";
+import { Loader2 } from "lucide-react";
 import useDataStore from "../store/useDataStore";
 
 export default function Adminlogin() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
-  const [role, setRole] = useState("super"); // default super admin
+  const [role, setRole] = useState("super");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  // const { adminLogin } = useDataStore();
+  
+  // Get the login action and loading state directly from the store
+  const { login, loading: isLoggingIn } = useDataStore();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,95 +20,93 @@ export default function Adminlogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(""); // Clear previous local errors
 
-    try {
-      // choose endpoint based on role
-      const endpoint = role === "super" ? "/auth/login" : "/auth/subadmin/login";
-      const res = await axios.post(endpoint, credentials);
+    // Call the login action from the store
+    const result = await login(credentials, role);
 
-      // save token in localStorage
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", role);
-
-      alert(res.data.message);
-      
-      
-
-      // navigate based on role
+    if (result.success) {
+      toast.success(result.message || "Login successful!");
+      // Navigate based on the role
       if (role === "super") {
         navigate("/admin/dashboard");
       } else {
         navigate("/subadmin/dashboard");
       }
-    } catch (err) {
-      console.error(err);
-      setError("Invalid email or password.");
+    } else {
+      // Set local error state to display the message in the form
+      setError(result.message);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-100 p-4">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-blue-300">
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">
-          {role === "super" ? "Super Admin Login" : "SubAdmin Login"}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          {role === "super" ? "Super Admin Login" : "Sub-Admin Login"}
         </h2>
 
         {error && (
-          <div className="text-red-500 text-center mb-4 font-medium">{error}</div>
+          <div className="text-red-600 bg-red-50 p-3 rounded-lg text-center mb-4 font-medium border border-red-200">
+            {error}
+          </div>
         )}
 
-        {/* Toggle role */}
-        <div className="flex justify-center mb-4">
-          <button
-            type="button"
-            onClick={() => setRole("super")}
-            className={`px-4 py-2 rounded-l-lg border ${role === "super" ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-          >
-            Super Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("sub")}
-            className={`px-4 py-2 rounded-r-lg border ${role === "sub" ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-          >
-            SubAdmin
-          </button>
+        {/* Role Toggle */}
+        <div className="flex justify-center mb-6">
+          <div className="flex rounded-lg border border-gray-300 p-1 bg-gray-100">
+            <button
+              type="button"
+              onClick={() => setRole("super")}
+              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${role === "super" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600"}`}
+            >
+              Super Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("sub")}
+              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${role === "sub" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600"}`}
+            >
+              Sub-Admin
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block font-medium text-blue-800">Email</label>
+            <label className="block font-medium text-gray-700">Email Address</label>
             <input
               type="email"
               name="email"
               value={credentials.email}
               onChange={handleChange}
               required
-              className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="email@example.com"
+              className="mt-1 w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+              placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block font-medium text-blue-800">Password</label>
+            <label className="block font-medium text-gray-700">Password</label>
             <input
               type="password"
               name="password"
               value={credentials.password}
               onChange={handleChange}
               required
-              className="w-full p-3 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="********"
+              className="mt-1 w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+              placeholder="••••••••"
             />
           </div>
 
-          <div className="text-center">
+          <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+              disabled={isLoggingIn}
+              className="w-full flex justify-center items-center gap-2 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
             >
-              Login
+              {isLoggingIn && <Loader2 className="w-5 h-5 animate-spin" />}
+              {isLoggingIn ? "Signing In..." : "Login"}
             </button>
           </div>
         </form>
@@ -113,3 +114,4 @@ export default function Adminlogin() {
     </div>
   );
 }
+

@@ -26,6 +26,7 @@ const HomePage = () => {
     const {
     courses,
     institutes,
+    topInstitutes,
     articles,
     fetchAllData,
     loading,
@@ -158,7 +159,7 @@ const HomePage = () => {
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
             <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
-              {institutes.map((institute) => (
+              {topInstitutes.map((institute) => (
                 <div key={institute._id} className="w-72 flex-shrink-0">
                   <InstituteCard institute={institute} />
                 </div>

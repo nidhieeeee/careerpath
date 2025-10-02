@@ -69,7 +69,7 @@ const colorMap = {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(skeletonStats);
-  const { isAdmin } = useDataStore();
+  const { isLoggedIn } = useDataStore();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [uploadSummary, setUploadSummary] = useState(null);
@@ -345,7 +345,7 @@ const handleBulkSubmit = async () => {
     toast.success("Sub-admin deleted successfully");
   };
 
-  if (!isAdmin) {
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
         <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
