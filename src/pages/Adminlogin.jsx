@@ -9,7 +9,7 @@ export default function Adminlogin() {
   const [role, setRole] = useState("super");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  
+
   // Get the login action and loading state directly from the store
   const { login, loading: isLoggingIn } = useDataStore();
 
@@ -58,14 +58,22 @@ export default function Adminlogin() {
             <button
               type="button"
               onClick={() => setRole("super")}
-              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${role === "super" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600"}`}
+              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                role === "super"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-gray-600"
+              }`}
             >
               Super Admin
             </button>
             <button
               type="button"
               onClick={() => setRole("sub")}
-              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${role === "sub" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600"}`}
+              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
+                role === "sub"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-gray-600"
+              }`}
             >
               Sub-Admin
             </button>
@@ -74,7 +82,9 @@ export default function Adminlogin() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block font-medium text-gray-700">Email Address</label>
+            <label className="block font-medium text-gray-700">
+              Email Address
+            </label>
             <input
               type="email"
               name="email"
@@ -114,4 +124,3 @@ export default function Adminlogin() {
     </div>
   );
 }
-
