@@ -1,4 +1,4 @@
-import React, { useState, useRef,useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import useDataStore from "../store/useDataStore";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -65,8 +65,6 @@ const colorMap = {
   "Total Articles": "bg-pink-100 text-pink-700",
 };
 
-
-
 export default function AdminDashboard() {
   const [stats, setStats] = useState(skeletonStats);
   const { isLoggedIn } = useDataStore();
@@ -92,22 +90,23 @@ export default function AdminDashboard() {
     },
   });
 
-
   // Fetch institutes for dropdown
   useEffect(() => {
     fetch(`${import.meta.env.VITE_BASE_URL}/institutes`)
       .then((res) => res.json())
-      .then((data) => {console.log(data); setInstitutes(data)})
+      .then((data) => {
+        console.log(data);
+        setInstitutes(data);
+      })
       .catch(() => toast.error("Failed to fetch institutes"));
   }, []);
 
   useEffect(() => {
-  fetch(`${import.meta.env.VITE_BASE_URL}/auth/subadmins`)
-    .then((res) => res.json())
-    .then((data) => setSubAdmins(data))
-    .catch(() => toast.error("Failed to fetch sub-admins"));
-}, []);
-
+    fetch(`${import.meta.env.VITE_BASE_URL}/auth/subadmins`)
+      .then((res) => res.json())
+      .then((data) => setSubAdmins(data))
+      .catch(() => toast.error("Failed to fetch sub-admins"));
+  }, []);
 
   // Form handlers
   const handleFormChange = (e) => {
@@ -133,17 +132,20 @@ export default function AdminDashboard() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${import.meta.env.VITE_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          institute: form.institute,
-          permissions: form.permissions,
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/api/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            password: form.password,
+            institute: form.institute,
+            permissions: form.permissions,
+          }),
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         toast.success("Sub-admin created successfully");
@@ -186,9 +188,7 @@ export default function AdminDashboard() {
     setEditIndex(null);
   };
 
-  
-
-    useEffect(() => {
+  useEffect(() => {
     fetch(`${import.meta.env.VITE_BASE_URL}/auth/stats/counts`)
       .then((res) => res.json())
       .then((data) => {
@@ -229,105 +229,105 @@ export default function AdminDashboard() {
       });
   }, []);
 
+  const handleFileUpload = async (e) => {
+    try {
+      const file = e.target.files[0];
+      if (!file) return;
 
-const handleFileUpload = async (e) => {
-  try {
-    const file = e.target.files[0];
-    if (!file) return;
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
 
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+      // Convert to JSON
+      const parsedData = XLSX.utils.sheet_to_json(worksheet);
+      console.log("Parsed Excel Data:", parsedData); // Debugging
 
-    // Convert to JSON
-    const parsedData = XLSX.utils.sheet_to_json(worksheet);
-    console.log("Parsed Excel Data:", parsedData); // Debugging
+      // Format rows
+      const formatted = parsedData.map((row) => {
+        const subAdmin = {
+          name: row["subAdminName"] || "",
+          email: row["subAdminEmail"] || "",
+          institute: row["instituteName"] || "",
+        };
 
-    // Format rows
-    const formatted = parsedData.map((row) => {
-      const subAdmin = {
-        name: row["subAdminName"] || "",
-        email: row["subAdminEmail"] || "",
-        institute: row["instituteName"] || "",
-      };
+        // Handle permissions
+        const permissions = {};
+        if ("manageCourses" in row) {
+          permissions.manageCourses =
+            row["manageCourses"] === true ||
+            row["manageCourses"]?.toString().toLowerCase() === "true";
+        }
+        if ("manageInstituteDetails" in row) {
+          permissions.manageInstituteDetails =
+            row["manageInstituteDetails"] === true ||
+            row["manageInstituteDetails"]?.toString().toLowerCase() === "true";
+        }
+        if ("addArticles" in row) {
+          permissions.addArticles =
+            row["addArticles"] === true ||
+            row["addArticles"]?.toString().toLowerCase() === "true";
+        }
+        if ("addMeritLists" in row) {
+          permissions.addMeritLists =
+            row["addMeritLists"] === true ||
+            row["addMeritLists"]?.toString().toLowerCase() === "true";
+        }
 
-      // Handle permissions
-      const permissions = {};
-      if ("manageCourses" in row) {
-        permissions.manageCourses =
-          row["manageCourses"] === true ||
-          row["manageCourses"]?.toString().toLowerCase() === "true";
-      }
-      if ("manageInstituteDetails" in row) {
-        permissions.manageInstituteDetails =
-          row["manageInstituteDetails"] === true ||
-          row["manageInstituteDetails"]?.toString().toLowerCase() === "true";
-      }
-      if ("addArticles" in row) {
-        permissions.addArticles =
-          row["addArticles"] === true ||
-          row["addArticles"]?.toString().toLowerCase() === "true";
-      }
-      if ("addMeritLists" in row) {
-        permissions.addMeritLists =
-          row["addMeritLists"] === true ||
-          row["addMeritLists"]?.toString().toLowerCase() === "true";
-      }
-
-      if (Object.keys(permissions).length > 0) {
-        subAdmin.permissions = permissions;
-      }
-      console.log(subAdmin)
-      return subAdmin;
-    });
-    // You may want to setSubAdmins or handle the formatted data here
-    setSubAdmins(formatted);
-    toast.success("File uploaded and parsed successfully!");
-  } catch (error) {
-    toast.error("Failed to upload or parse file");
-    console.error(error);
-  }
-};
-
-const handleBulkSubmit = async () => {
-  if (subAdmins.length === 0) {
-    toast.error("No sub-admins to upload");
-    return;
-  }
-
-  setUploading(true);
-  try {
-    const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/subadmin/bulk`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subAdmins }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      toast.success("Bulk upload processed successfully");
-      setUploadSummary({
-        success: data.created.length,
-        failed: data.skipped.length,
-        errors: data.skipped.map((s, idx) => ({
-          row: idx + 1,
-          error: s.reason,
-        })),
+        if (Object.keys(permissions).length > 0) {
+          subAdmin.permissions = permissions;
+        }
+        console.log(subAdmin);
+        return subAdmin;
       });
-      setSubAdmins([]); // clear after upload
-    } else {
-      toast.error(data.error || "Bulk upload failed");
+      // You may want to setSubAdmins or handle the formatted data here
+      setSubAdmins(formatted);
+      toast.success("File uploaded and parsed successfully!");
+    } catch (error) {
+      toast.error("Failed to upload or parse file");
+      console.error(error);
     }
-  } catch (error) {
-    console.error(error);
-    toast.error("Server error during bulk upload");
-  } finally {
-    setUploading(false);
-  }
-};
+  };
 
+  const handleBulkSubmit = async () => {
+    if (subAdmins.length === 0) {
+      toast.error("No sub-admins to upload");
+      return;
+    }
 
+    setUploading(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/auth/subadmin/bulk`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subAdmins }),
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Bulk upload processed successfully");
+        setUploadSummary({
+          success: data.created.length,
+          failed: data.skipped.length,
+          errors: data.skipped.map((s, idx) => ({
+            row: idx + 1,
+            error: s.reason,
+          })),
+        });
+        setSubAdmins([]); // clear after upload
+      } else {
+        toast.error(data.error || "Bulk upload failed");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Server error during bulk upload");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleEdit = (idx) => {
     setForm(subAdmins[idx]);
@@ -373,7 +373,7 @@ const handleBulkSubmit = async () => {
             credentials, please log in by clicking the button below.
           </p>
           <button
-            onClick={() => navigate("/admin")}
+            onClick={() => navigate("/login")}
             className="bg-blue-800 hover:bg-blue-900 text-white font-medium px-6 py-2 rounded-lg transition"
           >
             Go to Login
@@ -397,12 +397,7 @@ const handleBulkSubmit = async () => {
               >
                 <stat.icon className="w-10 h-10 mb-2" />
                 <div className="text-3xl font-extrabold mb-1">
-                  {stat.value !== null
-                    ? stat.value
-                    : (
-                      <span className="animate-pulse bg-gray-300 rounded w-16 h-8 inline-block"></span>
-                    )
-                  }
+                  {stat.value !== null ? stat.value : "00"}
                 </div>
                 <div className="font-semibold text-lg mb-1">{stat.label}</div>
                 <div className="text-sm text-gray-600">{stat.desc}</div>
@@ -411,151 +406,151 @@ const handleBulkSubmit = async () => {
           </div>
 
           {/* Add Sub-Admin Form */}
-              <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
-      <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
-        Add Sub-Admin
-      </h2>
-      <form
-        ref={formRef}
-        className="space-y-5"
-        onSubmit={handleFormSubmit}
-      >
-        <div>
-          <label className="block font-medium text-blue-700 mb-1">
-            Institute
-          </label>
-          <select
-            name="institute"
-            value={form.institute}
-            onChange={handleFormChange}
-            required
-            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">Select Institute</option>
-            {institutes?.map((inst) => (
-              <option key={inst._id} value={inst._id}>
-                {inst.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block font-medium text-blue-700 mb-1">
-            Name
-          </label>
-          <input
-            name="name"
-            value={form.name}
-            onChange={handleFormChange}
-            required
-            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-            placeholder="Full Name"
-          />
-        </div>
-        <div>
-          <label className="block font-medium text-blue-700 mb-1">
-            Email
-          </label>
-          <input
-            name="email"
-            value={form.email}
-            onChange={handleFormChange}
-            required
-            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-            placeholder="Email Address"
-          />
-        </div>
-        <div>
-          <label className="block font-medium text-blue-700 mb-1">
-            Phone (Optional)
-          </label>
-          <input
-            name="phone"
-            value={form.phone}
-            onChange={handleFormChange}
-            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-            placeholder="Phone Number"
-          />
-        </div>
-        <div>
-          <label className="block font-medium text-blue-700 mb-1">
-            Password
-          </label>
-          <input
-            name="password"
-            value={form.password}
-            onChange={handleFormChange}
-            required
-            type="password"
-            className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
-            placeholder="Password"
-          />
-        </div>
-        {/* Permissions checkboxes */}
-        <div>
-          <label className="block font-medium text-blue-700 mb-2">
-            Permissions
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <label>
-              <input
-                type="checkbox"
-                name="manageCourses"
-                checked={form.permissions.manageCourses}
-                onChange={handleFormChange}
-                className="mr-2"
-              />
-              Manage Courses
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="manageInstituteDetails"
-                checked={form.permissions.manageInstituteDetails}
-                onChange={handleFormChange}
-                className="mr-2"
-              />
-              Manage Institute Details
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="addArticles"
-                checked={form.permissions.addArticles}
-                onChange={handleFormChange}
-                className="mr-2"
-              />
-              Add Articles
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="addMeritLists"
-                checked={form.permissions.addMeritLists}
-                onChange={handleFormChange}
-                className="mr-2"
-              />
-              Add Merit Lists
-            </label>
+          <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
+              Add Sub-Admin
+            </h2>
+            <form
+              ref={formRef}
+              className="space-y-5"
+              onSubmit={handleFormSubmit}
+            >
+              <div>
+                <label className="block font-medium text-blue-700 mb-1">
+                  Institute
+                </label>
+                <select
+                  name="institute"
+                  value={form.institute}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">Select Institute</option>
+                  {institutes?.map((inst) => (
+                    <option key={inst._id} value={inst._id}>
+                      {inst.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block font-medium text-blue-700 mb-1">
+                  Name
+                </label>
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+                  placeholder="Full Name"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-blue-700 mb-1">
+                  Email
+                </label>
+                <input
+                  name="email"
+                  value={form.email}
+                  onChange={handleFormChange}
+                  required
+                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+                  placeholder="Email Address"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-blue-700 mb-1">
+                  Phone (Optional)
+                </label>
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+                  placeholder="Phone Number"
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-blue-700 mb-1">
+                  Password
+                </label>
+                <input
+                  name="password"
+                  value={form.password}
+                  onChange={handleFormChange}
+                  required
+                  type="password"
+                  className="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+                  placeholder="Password"
+                />
+              </div>
+              {/* Permissions checkboxes */}
+              <div>
+                <label className="block font-medium text-blue-700 mb-2">
+                  Permissions
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="manageCourses"
+                      checked={form.permissions.manageCourses}
+                      onChange={handleFormChange}
+                      className="mr-2"
+                    />
+                    Manage Courses
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="manageInstituteDetails"
+                      checked={form.permissions.manageInstituteDetails}
+                      onChange={handleFormChange}
+                      className="mr-2"
+                    />
+                    Manage Institute Details
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="addArticles"
+                      checked={form.permissions.addArticles}
+                      onChange={handleFormChange}
+                      className="mr-2"
+                    />
+                    Add Articles
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="addMeritLists"
+                      checked={form.permissions.addMeritLists}
+                      onChange={handleFormChange}
+                      className="mr-2"
+                    />
+                    Add Merit Lists
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-4 justify-end mt-2">
+                <button
+                  type="submit"
+                  className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
+                >
+                  {editIndex !== null ? "Update Sub-Admin" : "Create Sub-Admin"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFormReset}
+                  className="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
+                >
+                  Reset
+                </button>
+              </div>
+            </form>
           </div>
-        </div>
-        <div className="flex gap-4 justify-end mt-2">
-          <button
-            type="submit"
-            className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
-          >
-            {editIndex !== null ? "Update Sub-Admin" : "Create Sub-Admin"}
-          </button>
-          <button
-            type="button"
-            onClick={handleFormReset}
-            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
-          >
-            Reset
-          </button>
-        </div>
-      </form>
-    </div>
 
           {/* Bulk Upload Section */}
           <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300 max-w-2xl mx-auto mb-12">
@@ -652,23 +647,28 @@ const handleBulkSubmit = async () => {
               <tbody>
                 {subAdmins?.map((admin, idx) => (
                   <tr key={idx} className="hover:bg-blue-50">
-                    <td className="px-4 py-2 font-medium text-gray-800">{admin.name}</td>
+                    <td className="px-4 py-2 font-medium text-gray-800">
+                      {admin.name}
+                    </td>
                     <td className="px-4 py-2 text-gray-700">{admin.email}</td>
-                    <td className="px-4 py-2 text-gray-700">{admin.institute}</td>
+                    <td className="px-4 py-2 text-gray-700">
+                      {admin.institute}
+                    </td>
                     <td className="px-4 py-2 text-gray-700">
                       {Object.entries(admin.permissions)
                         .filter(([_, v]) => v)
                         .map(([k]) => k)
                         .join(", ") || "None"}
                     </td>
-                    <td className="px-4 py-2 text-gray-700">{admin.autoPassword}</td>
+                    <td className="px-4 py-2 text-gray-700">
+                      {admin.autoPassword}
+                    </td>
                     <td className="px-4 py-2">
                       {/* Your edit/delete buttons */}
                     </td>
                   </tr>
                 ))}
               </tbody>
-
             </table>
           </div>
         </div>

@@ -1,23 +1,18 @@
 import React, { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const navItems = [
-  { label: "Institutes", path: "/admin/institutes" },
-  { label: "Courses", path: "/admin/courses" },
-  { label: "Articles", path: "/admin/articles" },
-  { label: "Merit Lists", path: "/admin/meritlists" },
+  { label: "Courses", path: "/subadmin/courses" },
+  { label: "Articles", path: "/subadmin/articles" },
+  { label: "Merit Lists", path: "/subadmin/meritlists" },
 ];
 
-const AdminNavbar = () => {
-  const location = useLocation();
+const SubAdminNavbar = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const role = localStorage.getItem("role");
-  const navbarTitle =
-    role === "sub" ? "CareerPath Subadmin" : "CareerPath Admin";
 
   return (
-    <nav className="w-full bg-white/20 backdrop-blur-lg shadow-lg px-6 py-4 fixed top-0 left-0 z-50">
+    <nav className="w-full bg-white/80 backdrop-blur-lg shadow-sm px-6 py-4 fixed top-0 left-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div
           className="flex items-center cursor-pointer"
@@ -29,7 +24,7 @@ const AdminNavbar = () => {
             className="h-10 w-auto mr-2"
           />
           <span className="ml-2 font-bold text-xl text-gray-800">
-            {navbarTitle}
+            SubAdmin Dashboard
           </span>
         </div>
 
@@ -41,7 +36,7 @@ const AdminNavbar = () => {
               to={item.path}
               className={({ isActive }) =>
                 `pb-2 px-3 py-1 font-medium transition-all duration-300 ease-in-out border-b-2 transform rounded-md ${
-                  isActive || location.pathname === item.path
+                  isActive
                     ? "text-white border-blue-600 scale-110 bg-blue-600 underline"
                     : "text-gray-600 border-transparent hover:text-white hover:scale-110 hover:bg-blue-600 hover:underline hover:border-blue-600"
                 }`
@@ -86,7 +81,7 @@ const AdminNavbar = () => {
                 onClick={() => setIsMenuOpen(false)}
                 className={({ isActive }) =>
                   `p-3 font-medium transition-all duration-300 ease-in-out rounded-lg ${
-                    isActive || location.pathname === item.path
+                    isActive
                       ? "text-white bg-blue-600 shadow-md"
                       : "text-gray-700 hover:text-white hover:bg-blue-600 hover:shadow-md"
                   }`
@@ -102,4 +97,4 @@ const AdminNavbar = () => {
   );
 };
 
-export default AdminNavbar;
+export default SubAdminNavbar;

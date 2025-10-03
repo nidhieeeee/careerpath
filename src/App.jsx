@@ -31,6 +31,11 @@ import AdminInstitute from "./pages/AdminInstitute";
 import AdminArticles from "./pages/AdminArticles";
 import ExamsPage from "./pages/ExamPage";
 import InstituteDetailsPage from "./components/admin/sub/InstituteDetailsPage";
+import SubAdminDashboard from "./pages/SubAdminDashboard";
+import SubAdminCourses from "./pages/SubAdminCourses";
+import SubAdminArticles from "./pages/SubAdminArticles";
+import SubAdminMeritLists from "./pages/SubAdminMeritLists";
+import SubAdminNavbar from "./components/admin/SubAdminNavbar";
 
 // Context
 import { SearchProvider } from "./context/SearchContext";
@@ -49,7 +54,7 @@ const ScrollToTop = () => {
 const App = () => {
   const isMobile = window.innerWidth < 768;
 
-    const initializeAuth = useDataStore((state) => state.initializeAuth);
+  const initializeAuth = useDataStore((state) => state.initializeAuth);
 
   useEffect(() => {
     initializeAuth();
@@ -81,11 +86,13 @@ const App = () => {
 
         <Routes>
           {/* Routes WITHOUT Layout */}
-          <Route path="/admin" element={<Adminlogin />} />
+          <Route path="/login" element={<Adminlogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/institute" element={<AdminInstitute />} />
           <Route path="/admin/articles" element={<AdminArticles />} />
           <Route path="/admin/meritlists" element={<MeritListAdmin />} />
+          <Route path="/subadmin" element={<Adminlogin />} />
+          <Route path="/subadmin/dashboard" element={<SubAdminDashboard />} />
 
           {/* Routes WITH Layout */}
           <Route
@@ -195,6 +202,30 @@ const App = () => {
           <Route
             path="/admin/sub/institute/:id"
             element={<InstituteDetailsPage />}
+          />
+          <Route
+            path="/subadmin/courses"
+            element={
+              <LayoutWrapper>
+                <SubAdminCourses />
+              </LayoutWrapper>
+            }
+          />
+          <Route
+            path="/subadmin/articles"
+            element={
+              <LayoutWrapper>
+                <SubAdminArticles />
+              </LayoutWrapper>
+            }
+          />
+          <Route
+            path="/subadmin/meritlists"
+            element={
+              <LayoutWrapper>
+                <SubAdminMeritLists />
+              </LayoutWrapper>
+            }
           />
         </Routes>
       </SearchProvider>
