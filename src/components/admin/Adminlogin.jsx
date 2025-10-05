@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Loader2 } from "lucide-react";
-import useDataStore from "../store/useDataStore";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import useDataStore from "../../store/useDataStore";
 
 export default function Adminlogin() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [role, setRole] = useState("super");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const navigate = useNavigate();
 
   // Get the login action and loading state directly from the store
@@ -36,6 +38,25 @@ export default function Adminlogin() {
     } else {
       // Set local error state to display the message in the form
       setError(result.message);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!credentials.email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      // Simulate API call for password reset
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      toast.success("Password reset link sent to your email!");
+      setError("");
+    } catch (error) {
+      toast.error("Failed to send reset email. Please try again.");
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -98,15 +119,43 @@ export default function Adminlogin() {
 
           <div>
             <label className="block font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={credentials.password}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-              placeholder="••••••••"
-            />
+            <div className="relative mt-1">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={credentials.password}
+                onChange={handleChange}
+                required
+                className="w-full p-3 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Forgot Password Link */}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={isResettingPassword}
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors disabled:text-indigo-400 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              {isResettingPassword && (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              )}
+              {isResettingPassword ? "Sending..." : "Forgot Password?"}
+            </button>
           </div>
 
           <div className="pt-2">

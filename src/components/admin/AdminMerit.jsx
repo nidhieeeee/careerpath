@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
-import useDataStore from "../store/useDataStore";
-import { useMeritLists } from "../hooks/useMeritLists";
-import AdminNavbar from "../components/admin/AdminNavbar";
-import MeritListTable from "../components/admin/MeritListTable";
-import MeritListForm from "../components/admin/MeritForm"; // Assuming this form component is or will be refactored
-import UnauthorizedAccess from "../components/admin/UnauthorizedAccess";
+import useDataStore from "../../store/useDataStore";
+import { useMeritLists } from "../../hooks/useMeritLists";
+import AdminNavbar from "./AdminNavbar";
+import MeritListTable from "./MeritListTable";
+import MeritListForm from "./MeritForm"; // Assuming this form component is or will be refactored
+import UnauthorizedAccess from "./UnauthorizedAccess";
 import { Plus, List } from "lucide-react";
 
 const MeritListAdmin = () => {
   const { role, initializeAuth } = useDataStore();
-  const { meritLists, loading, addMeritList, updateMeritList, deleteMeritList } = useMeritLists();
+  const {
+    meritLists,
+    loading,
+    addMeritList,
+    updateMeritList,
+    deleteMeritList,
+  } = useMeritLists();
 
   const [view, setView] = useState("list");
   const [editingList, setEditingList] = useState(null);
@@ -51,7 +57,8 @@ const MeritListAdmin = () => {
     }
   };
 
-  if (role === null) return <div className="min-h-screen bg-gray-50" ref={topRef} />;
+  if (role === null)
+    return <div className="min-h-screen bg-gray-50" ref={topRef} />;
   if (role !== "super") return <UnauthorizedAccess />;
 
   return (
@@ -63,15 +70,27 @@ const MeritListAdmin = () => {
             <div>
               <header className="flex items-center justify-between mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Merit List Management</h1>
-                  <p className="text-sm text-gray-500 mt-1">Upload and manage all merit lists.</p>
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    Merit List Management
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Upload and manage all merit lists.
+                  </p>
                 </div>
-                <button onClick={() => showFormView()} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow-sm">
+                <button
+                  onClick={() => showFormView()}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow-sm"
+                >
                   <Plus size={20} /> Add Merit List
                 </button>
               </header>
               <main>
-                <MeritListTable meritLists={meritLists} loading={loading} onEdit={showFormView} onDelete={handleDelete} />
+                <MeritListTable
+                  meritLists={meritLists}
+                  loading={loading}
+                  onEdit={showFormView}
+                  onDelete={handleDelete}
+                />
               </main>
             </div>
           ) : (
@@ -81,9 +100,14 @@ const MeritListAdmin = () => {
                   <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                     {editingList ? "Edit Merit List" : "Add New Merit List"}
                   </h1>
-                  <p className="text-sm text-gray-500 mt-1">Fill out the details below.</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Fill out the details below.
+                  </p>
                 </div>
-                <button onClick={showListView} className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded-lg shadow-sm">
+                <button
+                  onClick={showListView}
+                  className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded-lg shadow-sm"
+                >
                   <List size={20} /> Back to List
                 </button>
               </header>
@@ -91,11 +115,11 @@ const MeritListAdmin = () => {
                 {/* IMPORTANT: You'll need to refactor `MeritForm.jsx` to accept these props, 
                   similar to how `InstituteForm` and `ArticleForm` were updated.
                 */}
-                <MeritListForm 
-                  initialData={editingList} 
-                  onSubmit={handleSave} 
-                  onCancel={showListView} 
-                  isSubmitting={isSubmitting} 
+                <MeritListForm
+                  initialData={editingList}
+                  onSubmit={handleSave}
+                  onCancel={showListView}
+                  isSubmitting={isSubmitting}
                 />
               </main>
             </div>

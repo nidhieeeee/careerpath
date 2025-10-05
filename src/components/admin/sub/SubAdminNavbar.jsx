@@ -1,22 +1,34 @@
 import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
 
 const navItems = [
+  { label: "Dashboard", path: "/subadmin/dashboard" },
   { label: "Courses", path: "/subadmin/courses" },
   { label: "Articles", path: "/subadmin/articles" },
   { label: "Merit Lists", path: "/subadmin/meritlists" },
 ];
 
 const SubAdminNavbar = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const handleNavigation = (path) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    navigate(path);
+  };
+
   return (
-    <nav className="w-full bg-white/80 backdrop-blur-lg shadow-sm px-6 py-4 fixed top-0 left-0 z-50">
+    <nav className="w-full bg-white/20 backdrop-blur-lg shadow-lg px-6 py-8 fixed top-0 left-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div
           className="flex items-center cursor-pointer"
-          onClick={() => navigate("/")}
+          onClick={() => handleNavigation("/subadmin/dashboard")}
         >
           <img
             src="/logoCP.png"
@@ -24,7 +36,7 @@ const SubAdminNavbar = () => {
             className="h-10 w-auto mr-2"
           />
           <span className="ml-2 font-bold text-xl text-gray-800">
-            SubAdmin Dashboard
+            CareerPath SubAdmin
           </span>
         </div>
 
@@ -35,16 +47,27 @@ const SubAdminNavbar = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `pb-2 px-3 py-1 font-medium transition-all duration-300 ease-in-out border-b-2 transform rounded-md ${
-                  isActive
-                    ? "text-white border-blue-600 scale-110 bg-blue-600 underline"
-                    : "text-gray-600 border-transparent hover:text-white hover:scale-110 hover:bg-blue-600 hover:underline hover:border-blue-600"
+                `px-4 py-2 font-medium transition-all duration-300 rounded-lg ${
+                  isActive || location.pathname === item.path
+                    ? "text-white bg-blue-600 shadow-lg"
+                    : "text-gray-600 hover:text-white hover:bg-blue-600 hover:shadow-md"
                 }`
               }
             >
               {item.label}
             </NavLink>
           ))}
+
+          {/* Profile Icon */}
+          <div className="relative">
+            <button
+              onClick={() => handleNavigation("/subadmin/account")}
+              className="p-2 text-gray-600 hover:text-white hover:bg-blue-600 rounded-full transition-all duration-300"
+              title="Account Settings"
+            >
+              <User className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu Button */}
@@ -75,21 +98,33 @@ const SubAdminNavbar = () => {
         <div className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-lg shadow-lg border-t border-gray-200">
           <div className="flex flex-col space-y-2 p-4">
             {navItems.map((item) => (
-              <NavLink
+              <button
                 key={item.path}
-                to={item.path}
-                onClick={() => setIsMenuOpen(false)}
-                className={({ isActive }) =>
-                  `p-3 font-medium transition-all duration-300 ease-in-out rounded-lg ${
-                    isActive
-                      ? "text-white bg-blue-600 shadow-md"
-                      : "text-gray-700 hover:text-white hover:bg-blue-600 hover:shadow-md"
-                  }`
-                }
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleNavigation(item.path);
+                }}
+                className={`p-3 font-medium transition-all duration-300 rounded-lg text-left ${
+                  location.pathname === item.path
+                    ? "text-white bg-blue-600 shadow-md"
+                    : "text-gray-700 hover:text-white hover:bg-blue-600"
+                }`}
               >
                 {item.label}
-              </NavLink>
+              </button>
             ))}
+
+            {/* Mobile Profile Link */}
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                handleNavigation("/subadmin/account");
+              }}
+              className="p-3 font-medium transition-all duration-300 rounded-lg text-gray-700 hover:text-white hover:bg-blue-600 flex items-center gap-2"
+            >
+              <User className="w-4 h-4" />
+              Account Settings
+            </button>
           </div>
         </div>
       )}

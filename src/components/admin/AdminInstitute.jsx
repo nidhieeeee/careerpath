@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
-import useDataStore from "../store/useDataStore";
-import AdminNavbar from "../components/admin/AdminNavbar";
-import InstituteForm from "../components/admin/InstituteForm";
-import InstituteTable from "../components/admin/InstituteTable";
-import UnauthorizedAccess from "../components/admin/UnauthorizedAccess";
+import useDataStore from "../../store/useDataStore";
+import AdminNavbar from "../../components/admin/AdminNavbar";
+import InstituteForm from "../../components/admin/InstituteForm";
+import InstituteTable from "../../components/admin/InstituteTable";
+import UnauthorizedAccess from "../../components/admin/UnauthorizedAccess";
 import { Plus, List } from "lucide-react";
-import axios from "../components/api/axios";
+import axios from "../../components/api/axios";
 import { toast } from "react-toastify";
 
 const AdminInstitutes = () => {
   // Use the store for state management
-  const { role, initializeAuth, institutes, loading, fetchInstitutes } = useDataStore();
+  const { role, initializeAuth, institutes, loading, fetchInstitutes } =
+    useDataStore();
 
   // 'list' or 'form' to control which view is shown
-  const [view, setView] = useState('list');
+  const [view, setView] = useState("list");
   const [editingInstitute, setEditingInstitute] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const topRef = useRef(null);
@@ -21,7 +22,7 @@ const AdminInstitutes = () => {
   // Initialize auth and fetch data on component mount
   useEffect(() => {
     initializeAuth();
-    if (role === 'super') {
+    if (role === "super") {
       fetchInstitutes();
     }
   }, [role, initializeAuth, fetchInstitutes]);
@@ -29,15 +30,15 @@ const AdminInstitutes = () => {
   // Handler to switch to the form view
   const showFormView = (institute = null) => {
     setEditingInstitute(institute);
-    setView('form');
+    setView("form");
     // Scroll to the top for a better user experience
-    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   // Handler to switch back to the list view
   const showListView = () => {
     setEditingInstitute(null);
-    setView('list');
+    setView("list");
   };
 
   // Handler for form submission
@@ -54,7 +55,9 @@ const AdminInstitutes = () => {
       await fetchInstitutes(); // Refresh data from the server
       showListView(); // Go back to the list view after saving
     } catch (err) {
-      toast.error(err.response?.data?.message || "An error occurred. Please try again.");
+      toast.error(
+        err.response?.data?.message || "An error occurred. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -62,14 +65,14 @@ const AdminInstitutes = () => {
 
   // Handler for deleting an institute
   const handleDelete = async (instituteId) => {
-    if (window.confirm('Are you sure you want to delete this institute?')) {
-        try {
-            await axios.delete(`/institutes/${instituteId}`);
-            toast.success("Institute deleted successfully.");
-            await fetchInstitutes(); // Refresh data
-        } catch (err) {
-            toast.error("Failed to delete institute.");
-        }
+    if (window.confirm("Are you sure you want to delete this institute?")) {
+      try {
+        await axios.delete(`/institutes/${instituteId}`);
+        toast.success("Institute deleted successfully.");
+        await fetchInstitutes(); // Refresh data
+      } catch (err) {
+        toast.error("Failed to delete institute.");
+      }
     }
   };
 
@@ -89,13 +92,17 @@ const AdminInstitutes = () => {
         <div className="max-w-7xl mx-auto">
           {/* --- CONDITIONAL VIEW RENDERING --- */}
 
-          {view === 'list' ? (
+          {view === "list" ? (
             // --- LIST VIEW ---
             <div>
               <header className="flex items-center justify-between mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Institute Management</h1>
-                  <p className="text-sm text-gray-500 mt-1">Browse, add, and edit institute details.</p>
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    Institute Management
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Browse, add, and edit institute details.
+                  </p>
                 </div>
                 <button
                   onClick={() => showFormView()}
@@ -117,7 +124,7 @@ const AdminInstitutes = () => {
             // --- FORM VIEW ---
             <div>
               <header className="flex items-center justify-between mb-8">
-                 <div>
+                <div>
                   <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                     {editingInstitute ? "Edit Institute" : "Add New Institute"}
                   </h1>

@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import useDataStore from "../store/useDataStore";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import AdminNavbar from "../components/admin/AdminNavbar";
 import * as XLSX from "xlsx";
+import useDataStore from "../../store/useDataStore";
+import AdminNavbar from "../../components/admin/AdminNavbar";
 
 import {
   AcademicCapIcon,
@@ -350,7 +350,6 @@ export default function AdminDashboard() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
         <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
           <div className="flex justify-center mb-4">
-            {/* Replace ShieldAlert with a valid icon if not imported */}
             <svg
               className="w-12 h-12 text-red-500"
               fill="none"
@@ -386,8 +385,19 @@ export default function AdminDashboard() {
   return (
     <>
       <AdminNavbar />
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 py-10 px-2 md:px-8">
+      {/* Added pt-24 to prevent navbar overlap */}
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 pt-24 py-10 px-2 md:px-8">
         <div className="max-w-7xl mx-auto">
+          {/* Page Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Welcome to your administrative panel
+            </p>
+          </div>
+
           {/* Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {stats.map((stat, idx) => (
@@ -492,7 +502,7 @@ export default function AdminDashboard() {
                   Permissions
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <label>
+                  <label className="flex items-center">
                     <input
                       type="checkbox"
                       name="manageCourses"
@@ -502,7 +512,7 @@ export default function AdminDashboard() {
                     />
                     Manage Courses
                   </label>
-                  <label>
+                  <label className="flex items-center">
                     <input
                       type="checkbox"
                       name="manageInstituteDetails"
@@ -512,7 +522,7 @@ export default function AdminDashboard() {
                     />
                     Manage Institute Details
                   </label>
-                  <label>
+                  <label className="flex items-center">
                     <input
                       type="checkbox"
                       name="addArticles"
@@ -522,7 +532,7 @@ export default function AdminDashboard() {
                     />
                     Add Articles
                   </label>
-                  <label>
+                  <label className="flex items-center">
                     <input
                       type="checkbox"
                       name="addMeritLists"
@@ -534,7 +544,7 @@ export default function AdminDashboard() {
                   </label>
                 </div>
               </div>
-              <div className="flex gap-4 justify-end mt-2">
+              <div className="flex gap-4 justify-end mt-6">
                 <button
                   type="submit"
                   className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
@@ -594,7 +604,7 @@ export default function AdminDashboard() {
                     {uploadSummary.success} sub-admins created successfully,{" "}
                     {uploadSummary.failed} failed
                   </div>
-                  {uploadSummary.errors.length > 0 && (
+                  {uploadSummary.errors && uploadSummary.errors.length > 0 && (
                     <div className="text-red-600 text-sm">
                       Error rows:
                       <ul className="list-disc ml-4">
@@ -610,66 +620,84 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <button
-              onClick={handleBulkSubmit}
-              disabled={uploading || subAdmins.length === 0}
-              className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200"
-            >
-              {uploading ? "Uploading..." : "Submit Bulk Upload"}
-            </button>
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleBulkSubmit}
+                disabled={uploading || subAdmins.length === 0}
+                className="bg-blue-700 hover:bg-blue-900 text-white font-semibold px-6 py-2 rounded-xl shadow transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {uploading ? "Uploading..." : "Submit Bulk Upload"}
+              </button>
+            </div>
           </div>
 
           {/* Sub-Admins Table */}
-          <div className="bg-white p-8 rounded-2xl shadow-xl border border-blue-200 max-w-5xl mx-auto mb-12 overflow-x-auto">
+          <div className="bg-white p-8 rounded-2xl shadow-xl border border-blue-200 mx-auto mb-12 overflow-x-auto">
             <h2 className="text-2xl font-bold text-blue-800 mb-6 text-center">
               All Sub-Admins
             </h2>
-            <table className="min-w-full divide-y divide-blue-100">
-              <thead>
-                <tr className="bg-blue-50">
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
-                    Name
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
-                    Email
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
-                    Institute
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
-                    Permissions
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-blue-700">
-                    Auto Password
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {subAdmins?.map((admin, idx) => (
-                  <tr key={idx} className="hover:bg-blue-50">
-                    <td className="px-4 py-2 font-medium text-gray-800">
-                      {admin.name}
-                    </td>
-                    <td className="px-4 py-2 text-gray-700">{admin.email}</td>
-                    <td className="px-4 py-2 text-gray-700">
-                      {admin.institute}
-                    </td>
-                    <td className="px-4 py-2 text-gray-700">
-                      {Object.entries(admin.permissions)
-                        .filter(([_, v]) => v)
-                        .map(([k]) => k)
-                        .join(", ") || "None"}
-                    </td>
-                    <td className="px-4 py-2 text-gray-700">
-                      {admin.autoPassword}
-                    </td>
-                    <td className="px-4 py-2">
-                      {/* Your edit/delete buttons */}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-blue-100">
+                <thead>
+                  <tr className="bg-blue-50">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-blue-700">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-blue-700">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-blue-700">
+                      Institute
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-blue-700">
+                      Permissions
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-blue-700">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {subAdmins?.map((admin, idx) => (
+                    <tr key={idx} className="hover:bg-blue-50">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-800">
+                        {admin.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {admin.email}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {admin.institute}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {admin.permissions
+                          ? Object.entries(admin.permissions)
+                              .filter(([_, v]) => v)
+                              .map(([k]) => k)
+                              .join(", ")
+                          : "None"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEdit(idx)}
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(idx)}
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
