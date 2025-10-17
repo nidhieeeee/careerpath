@@ -88,7 +88,7 @@ const AdminInstitutes = () => {
   return (
     <>
       <AdminNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8" ref={topRef}>
+      <div className="min-h-screen bg-gray-50 p-4 mt-20 sm:p-6 lg:p-8" ref={topRef}>
         <div className="max-w-7xl mx-auto">
           {/* --- CONDITIONAL VIEW RENDERING --- */}
 

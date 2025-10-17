@@ -64,7 +64,7 @@ const MeritListAdmin = () => {
   return (
     <>
       <AdminNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8" ref={topRef}>
+      <div className="min-h-screen bg-gray-50 mt-20 p-4 sm:p-6 lg:p-8" ref={topRef}>
         <div className="max-w-7xl mx-auto">
           {view === "list" ? (
             <div>

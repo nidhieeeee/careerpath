@@ -1,61 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, Filter } from 'lucide-react';
 import CourseCard from '../components/courses/CourseCard';
-import { trendingCourses } from '../data/mockData';
+import useDataStore from '../store/useDataStore';
 
 const AfterGraduationPage = () => {
   const [activeStream, setActiveStream] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
-  
-  // In a real app, these would come from an API
-  // Filter to only include PG courses
-  const postGradCourses = trendingCourses.filter(course => course.type === 'PG');
-  
-  // For demo purposes, let's modify some courses to be PG
-  const mockPGCourses = [
-    {
-      id: '6',
-      name: 'Master of Technology (M.Tech)',
-      duration: '2 years',
-      description: 'An advanced engineering program for specialized technical expertise.',
-      popularity: 4.6,
-      type: 'PG',
-      stream: 'Science',
-      fees: 150000,
-      seats: 60,
-      finance_type: 'Self-Finance',
-    },
-    {
-      id: '7',
-      name: 'Master of Business Administration (MBA)',
-      duration: '2 years',
-      description: 'Advanced business program for management and leadership roles.',
-      popularity: 4.7,
-      type: 'PG',
-      stream: 'Commerce',
-      fees: 200000,
-      seats: 120,
-      finance_type: 'Self-Finance',
-    },
-    {
-      id: '8',
-      name: 'Master of Arts (MA) in Economics',
-      duration: '2 years',
-      description: 'Advanced study of economic theories, policies, and applications.',
-      popularity: 4.2,
-      type: 'PG',
-      stream: 'Arts',
-      fees: 80000,
-      seats: 60,
-      finance_type: 'Government',
-    },
-  ];
-  
-  const allPGCourses = [...postGradCourses, ...mockPGCourses];
-  
+  const { courses, fetchCourses } = useDataStore();
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
+  // Filter courses to only include Post-Graduate (PG)
+  const relevantCourses = courses.filter(course => course.type === 'PG');
+
   const filteredCourses = activeStream === 'all' 
-    ? allPGCourses 
-    : allPGCourses.filter(course => course.stream.toLowerCase() === activeStream);
+    ? relevantCourses 
+    : relevantCourses.filter(course => course.stream.toLowerCase() === activeStream);
 
   return (
     <div className="min-h-screen pb-16">
@@ -129,11 +91,11 @@ const AfterGraduationPage = () => {
                   Course Specialization
                 </label>
                 <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
-                  <option value="">Any Specialization</option>
-                  <option value="tech">Technology</option>
-                  <option value="mgmt">Management</option>
-                  <option value="science">Science</option>
-                  <option value="arts">Arts & Humanities</option>
+                    <option value="">Any Specialization</option>
+                    <option value="tech">Technology</option>
+                    <option value="mgmt">Management</option>
+                    <option value="science">Science</option>
+                    <option value="arts">Arts & Humanities</option>
                 </select>
               </div>
             </div>
