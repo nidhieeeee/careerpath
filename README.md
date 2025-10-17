@@ -132,7 +132,48 @@ npm run dev      # Start development server
 npm run build    # Build for production
 npm run preview  # Preview production build
 ```
+## 🔌 API Endpoints
 
+### Base URL
+```
+http://localhost:5000/api
+```
+
+### Authentication
+```bash
+POST /auth/login          # User login
+POST /auth/logout         # User logout
+```
+
+### Super Admin Endpoints
+```bash
+GET    /admin/dashboard     # Dashboard data
+GET    /admin/institutes    # Get all institutes
+POST   /admin/institutes    # Create institute
+PUT    /admin/institutes/:id # Update institute
+DELETE /admin/institutes/:id # Delete institute
+GET    /admin/subadmins     # Get all sub-admins
+POST   /admin/subadmins     # Create sub-admin
+PUT    /admin/subadmins/:id # Update sub-admin
+DELETE /admin/subadmins/:id # Delete sub-admin
+```
+
+### Sub-Admin Endpoints
+```bash
+GET    /subadmin/dashboard    # Dashboard data
+GET    /subadmin/courses      # Get courses
+POST   /subadmin/courses      # Create course
+PUT    /subadmin/courses/:id  # Update course
+DELETE /subadmin/courses/:id  # Delete course
+GET    /subadmin/articles     # Get articles
+POST   /subadmin/articles     # Create article
+PUT    /subadmin/articles/:id # Update article
+DELETE /subadmin/articles/:id # Delete article
+GET    /subadmin/meritlists   # Get merit lists
+POST   /subadmin/meritlists   # Create merit list
+PUT    /subadmin/meritlists/:id # Update merit list
+DELETE /subadmin/meritlists/:id # Delete merit list
+```
 ---
 
 ## 📁 Project Structure
