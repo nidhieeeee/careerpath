@@ -82,7 +82,7 @@ export default function SubAdminAccount() {
   return (
     <>
       <SubAdminNavbar />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pt-32 py-10 px-2 md:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 mt-32 py-10 px-2 md:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-800 mb-2">

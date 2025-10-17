@@ -386,7 +386,7 @@ export default function AdminDashboard() {
     <>
       <AdminNavbar />
       {/* Added pt-24 to prevent navbar overlap */}
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 pt-24 py-10 px-2 md:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 pt-32 py-10 px-2 md:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Page Title */}
           <div className="text-center mb-8">

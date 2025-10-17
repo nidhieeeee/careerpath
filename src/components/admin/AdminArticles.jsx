@@ -62,7 +62,10 @@ const AdminArticles = () => {
   return (
     <>
       <AdminNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8" ref={topRef}>
+      <div
+        className="min-h-screen bg-gray-50 p-4 mt-32 sm:p-6 lg:p-8"
+        ref={topRef}
+      >
         <div className="max-w-7xl mx-auto">
           {view === "list" ? (
             <div>

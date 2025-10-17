@@ -168,7 +168,7 @@ const SubAdminMeritLists = () => {
     <>
       <SubAdminNavbar />
       <div
-        className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pt-32"
+        className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 mt-32"
         ref={topRef}
       >
         <div className="max-w-7xl mx-auto">

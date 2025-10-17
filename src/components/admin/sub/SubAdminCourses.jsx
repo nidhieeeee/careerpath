@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import useDataStore from "../../../store/useDataStore";
 import { useCourses } from "../../../hooks/useCourses";
 import SubAdminNavbar from "./SubAdminNavbar";
-// import CourseGrid from "../CourseGrid";
 import CourseForm from "../CourseForm";
 import UnauthorizedAccess from "../UnauthorizedAccess";
 import {
@@ -14,45 +13,132 @@ import {
   Users,
   Award,
   MapPin,
+  Search,
+  Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const SubAdminCourses = () => {
   const { role, initializeAuth, isLoggedIn, user } = useDataStore();
-  const { courses, loading, addCourse, updateCourse, deleteCourse } =
-    useCourses();
+  const {
+    courses,
+    loading,
+    addCourse,
+    updateCourse,
+    deleteCourse,
+    fetchCourses,
+  } = useCourses();
   const navigate = useNavigate();
 
   const [view, setView] = useState("list");
   const [editingCourse, setEditingCourse] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filteredCourses, setFilteredCourses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const topRef = useRef(null);
 
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
 
-  // Check authentication and redirect if needed
   useEffect(() => {
     if (!isLoggedIn) {
       navigate("/login");
     }
   }, [isLoggedIn, navigate]);
 
-  // Filter courses by subadmin's institute
+  // Fetch courses when component mounts or user changes
   useEffect(() => {
-    if (courses && user?.institute) {
-      const instituteCourses = courses.filter(
+    if (isLoggedIn && user?.institute) {
+      fetchCourses();
+    }
+  }, [isLoggedIn, user, fetchCourses]);
+
+  // Filter courses by subadmin's institute and search/filter criteria
+  useEffect(() => {
+    let filtered = courses || [];
+
+    // Filter by institute for subadmin
+    if (user?.institute) {
+      filtered = filtered.filter(
         (course) =>
           course.institute === user.institute ||
           course.instituteId === user.institute
       );
-      setFilteredCourses(instituteCourses);
-    } else {
-      setFilteredCourses(courses || []);
     }
-  }, [courses, user]);
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (course) =>
+          course.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(
+        (course) =>
+          course.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    // Apply level filter
+    if (selectedLevel) {
+      filtered = filtered.filter(
+        (course) => course.level?.toLowerCase() === selectedLevel.toLowerCase()
+      );
+    }
+
+    // Apply status filter
+    if (selectedStatus) {
+      filtered = filtered.filter(
+        (course) =>
+          course.status?.toLowerCase() === selectedStatus.toLowerCase()
+      );
+    }
+
+    setFilteredCourses(filtered);
+  }, [
+    courses,
+    user,
+    searchTerm,
+    selectedCategory,
+    selectedLevel,
+    selectedStatus,
+  ]);
+
+  // Get unique categories, levels, and statuses for filter options
+  const instituteCourses =
+    courses?.filter(
+      (course) =>
+        course.institute === user?.institute ||
+        course.instituteId === user?.institute
+    ) || [];
+
+  const categories = [
+    ...new Set(
+      instituteCourses.map((course) => course.category).filter(Boolean)
+    ),
+  ];
+  const levels = [
+    ...new Set(instituteCourses.map((course) => course.level).filter(Boolean)),
+  ];
+  const statuses = [
+    ...new Set(instituteCourses.map((course) => course.status).filter(Boolean)),
+  ];
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("");
+    setSelectedLevel("");
+    setSelectedStatus("");
+  };
 
   const showFormView = (course = null) => {
     setEditingCourse(course);
@@ -84,13 +170,19 @@ const SubAdminCourses = () => {
     }
     if (success) {
       showListView();
+      // Refresh courses after successful save
+      fetchCourses();
     }
     setIsSubmitting(false);
   };
 
-  const handleDelete = (courseId) => {
+  const handleDelete = async (courseId) => {
     if (window.confirm("Are you sure you want to delete this course?")) {
-      deleteCourse(courseId);
+      const success = await deleteCourse(courseId);
+      if (success) {
+        // Refresh courses after successful delete
+        fetchCourses();
+      }
     }
   };
 
@@ -107,6 +199,7 @@ const SubAdminCourses = () => {
         return Users;
       case "arts":
       case "humanities":
+      case "design":
         return BookOpen;
       default:
         return BookOpen;
@@ -121,21 +214,7 @@ const SubAdminCourses = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
         <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
-          <div className="flex justify-center mb-4">
-            <svg
-              className="w-12 h-12 text-red-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 2l7 6v6c0 5-3.5 9-7 9s-7-4-7-9V8l7-6z"
-              />
-            </svg>
-          </div>
+          <BookOpen className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-blue-900 mb-2">
             Unauthorized Access
           </h2>
@@ -158,11 +237,15 @@ const SubAdminCourses = () => {
   return (
     <>
       <SubAdminNavbar />
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pt-36">
+      <div
+        className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8"
+        style={{ paddingTop: "8rem" }}
+        ref={topRef}
+      >
         <div className="max-w-7xl mx-auto">
           {view === "list" ? (
             <div>
-              <header className="flex items-center justify-between mb-8">
+              <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
                     <BookOpen className="w-8 h-8 text-blue-600" />
@@ -182,14 +265,136 @@ const SubAdminCourses = () => {
                 </div>
                 <button
                   onClick={() => showFormView()}
-                  className="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition-colors"
+                  className="flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap"
                 >
                   <Plus size={20} /> Add Course
                 </button>
               </header>
 
+              {/* Search and Filter Section */}
+              <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-8">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  {/* Search Bar */}
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Search courses by name, category, or description..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={selectedLevel}
+                      onChange={(e) => setSelectedLevel(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">All Levels</option>
+                      {levels.map((level) => (
+                        <option key={level} value={level}>
+                          {level}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">All Status</option>
+                      {statuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      onClick={clearFilters}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Filter className="w-4 h-4" />
+                      Clear
+                    </button>
+                  </div>
+                </div>
+
+                {/* Active Filters Display */}
+                {(searchTerm ||
+                  selectedCategory ||
+                  selectedLevel ||
+                  selectedStatus) && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {searchTerm && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                        Search: "{searchTerm}"
+                        <button
+                          onClick={() => setSearchTerm("")}
+                          className="ml-2 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {selectedCategory && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                        Category: {selectedCategory}
+                        <button
+                          onClick={() => setSelectedCategory("")}
+                          className="ml-2 text-green-600 hover:text-green-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {selectedLevel && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+                        Level: {selectedLevel}
+                        <button
+                          onClick={() => setSelectedLevel("")}
+                          className="ml-2 text-purple-600 hover:text-purple-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {selectedStatus && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800">
+                        Status: {selectedStatus}
+                        <button
+                          onClick={() => setSelectedStatus("")}
+                          className="ml-2 text-orange-600 hover:text-orange-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Course Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
                   <div className="flex items-center">
                     <div className="p-3 bg-blue-100 rounded-full">
@@ -200,7 +405,7 @@ const SubAdminCourses = () => {
                         Total Courses
                       </h3>
                       <p className="text-2xl font-bold text-blue-600">
-                        {filteredCourses.length}
+                        {instituteCourses.length}
                       </p>
                     </div>
                   </div>
@@ -217,7 +422,7 @@ const SubAdminCourses = () => {
                       </h3>
                       <p className="text-2xl font-bold text-green-600">
                         {
-                          filteredCourses.filter(
+                          instituteCourses.filter(
                             (course) => course.status === "active"
                           ).length
                         }
@@ -236,11 +441,23 @@ const SubAdminCourses = () => {
                         Categories
                       </h3>
                       <p className="text-2xl font-bold text-purple-600">
-                        {
-                          new Set(
-                            filteredCourses.map((course) => course.category)
-                          ).size
-                        }
+                        {categories.length}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-orange-100 rounded-full">
+                      <Search className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Filtered Results
+                      </h3>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {filteredCourses.length}
                       </p>
                     </div>
                   </div>
@@ -264,20 +481,37 @@ const SubAdminCourses = () => {
                   </div>
                 ) : filteredCourses.length === 0 ? (
                   <div className="text-center py-12">
-                    <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-xl font-medium text-gray-900 mb-2">
-                      No courses found
+                      {searchTerm ||
+                      selectedCategory ||
+                      selectedLevel ||
+                      selectedStatus
+                        ? "No courses match your search criteria"
+                        : "No courses found"}
                     </h3>
                     <p className="text-gray-500 mb-6">
-                      Start by adding your first course for this institute.
+                      {searchTerm ||
+                      selectedCategory ||
+                      selectedLevel ||
+                      selectedStatus
+                        ? "Try adjusting your search terms or filters."
+                        : "Start by adding your first course for this institute."}
                     </p>
-                    <button
-                      onClick={() => showFormView()}
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add First Course
-                    </button>
+                    {!(
+                      searchTerm ||
+                      selectedCategory ||
+                      selectedLevel ||
+                      selectedStatus
+                    ) && (
+                      <button
+                        onClick={() => showFormView()}
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add First Course
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -361,7 +595,7 @@ const SubAdminCourses = () => {
             </div>
           ) : (
             <div>
-              <header className="flex items-center justify-between mb-8">
+              <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
                     <BookOpen className="w-8 h-8 text-blue-600" />
@@ -370,18 +604,10 @@ const SubAdminCourses = () => {
                   <p className="text-sm text-gray-500 mt-1">
                     Fill out the details below.
                   </p>
-                  {user?.institute && (
-                    <div className="mt-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        Institute: {user.instituteName || user.institute}
-                      </span>
-                    </div>
-                  )}
                 </div>
                 <button
                   onClick={showListView}
-                  className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition-colors"
+                  className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition-colors whitespace-nowrap"
                 >
                   <List size={20} /> Back to List
                 </button>
