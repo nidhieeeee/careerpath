@@ -18,6 +18,7 @@ const Header = () => {
     { label: 'Articles', path: '/articles' },
     { label: 'Contact', path: '/contact' },
     { label: 'Exams' , path: '/exam'},
+    { label: 'Admissions Guide', path: '/guidance' },
   ];
 
   useEffect(() => {

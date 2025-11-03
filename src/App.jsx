@@ -26,6 +26,7 @@ import ArticleDetailPage from "./pages/ArticleDetailPage";
 import ContactPage from "./pages/ContactPage";
 import SearchResult from "./pages/SearchResult";
 import ExamsPage from "./pages/ExamPage";
+import AdmissionsGuide from "./pages/guidancePage.jsx";
 
 // Admin Components
 import Adminlogin from "./components/admin/Adminlogin";
@@ -110,6 +111,7 @@ const App = () => {
             path="/subadmin/institute/:id"
             element={<InstituteDetailsPage />}
           />
+          <Route path="/guidance" element={<AdmissionsGuide />} />
 
           {/* Public Routes (WITH Layout) */}
           <Route
