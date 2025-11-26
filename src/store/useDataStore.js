@@ -1,5 +1,13 @@
 import { create } from "zustand";
-import axios from "axios"; // Ensure this is your pre-configured axios instance
+import axios from "axios";
+
+// Utility: Alphabetical sorting helper
+const alphaSort = (arr, key) => {
+  if (!Array.isArray(arr)) return [];
+  return [...arr].sort((a, b) =>
+    a[key]?.toString().localeCompare(b[key]?.toString())
+  );
+};
 
 const useDataStore = create((set) => ({
   courses: [],
@@ -9,46 +17,51 @@ const useDataStore = create((set) => ({
   loading: false,
   error: null,
   isLoggedIn: false,
-  role: null, // "super" | "sub" | null
+  role: null,
 
-  // --- ASYNC LOGIN ACTION ---
-  // This action now handles the entire login flow.
+  // ------------------ LOGIN ------------------
   login: async (credentials, role) => {
     set({ loading: true, error: null });
+
     try {
-      const endpoint = role === "super" ? "/auth/login" : "/auth/subadmin/login";
-      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}${endpoint}`, credentials);
+      const endpoint =
+        role === "super" ? "/auth/login" : "/auth/subadmin/login";
+
+      const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}${endpoint}`,
+        credentials
+      );
 
       const { token } = res.data;
+
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
       set({ isLoggedIn: true, role, loading: false });
-      
-      // Return a structured success response
-      return { success: true, message: res.data.message };
 
+      return { success: true, message: res.data.message };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || "Invalid credentials.";
+      const errorMessage =
+        err.response?.data?.message || "Invalid credentials.";
       console.error("Login Error:", err);
+
       set({ error: errorMessage, loading: false });
-      
-      // Return a structured error response
       return { success: false, message: errorMessage };
     }
   },
 
-  // --- LOGOUT ACTION ---
+  // ------------------ LOGOUT ------------------
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     set({ isLoggedIn: false, role: null });
   },
 
-  // --- INITIALIZE AUTH STATE ---
+  // ------------------ AUTH INIT ------------------
   initializeAuth: () => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
+
     if (token && role) {
       set({ isLoggedIn: true, role });
     } else {
@@ -56,22 +69,36 @@ const useDataStore = create((set) => ({
     }
   },
 
-  // --- DATA FETCHING ACTIONS (Unchanged) ---
+  // ------------------ FETCH ALL DATA ------------------
   fetchAllData: async () => {
     set({ loading: true, error: null });
+
     try {
-      const [coursesRes, institutesRes, articlesRes, topInstitutesRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_BASE_URL}/courses`),
-        axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`),
-        axios.get(`${import.meta.env.VITE_BASE_URL}/articles`),
-        axios.get(`${import.meta.env.VITE_BASE_URL}/institutes/top`),
-      ]);
+      const [coursesRes, institutesRes, articlesRes, topInstitutesRes] =
+        await Promise.all([
+          axios.get(`${import.meta.env.VITE_BASE_URL}/courses`),
+          axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`),
+          axios.get(`${import.meta.env.VITE_BASE_URL}/articles`),
+          axios.get(`${import.meta.env.VITE_BASE_URL}/institutes/top`),
+        ]);
 
       set({
-        courses: Array.isArray(coursesRes.data) ? coursesRes.data : [],
-        institutes: Array.isArray(institutesRes.data) ? institutesRes.data : [],
-        articles: Array.isArray(articlesRes.data) ? articlesRes.data : [],
-        topInstitutes: Array.isArray(topInstitutesRes.data) ? topInstitutesRes.data : [],
+        courses: alphaSort(
+          Array.isArray(coursesRes.data) ? coursesRes.data : [],
+          "name"
+        ),
+        institutes: alphaSort(
+          Array.isArray(institutesRes.data) ? institutesRes.data : [],
+          "name"
+        ),
+        articles: alphaSort(
+          Array.isArray(articlesRes.data) ? articlesRes.data : [],
+          "title"
+        ),
+        topInstitutes: alphaSort(
+          Array.isArray(topInstitutesRes.data) ? topInstitutesRes.data : [],
+          "name"
+        ),
         loading: false,
       });
     } catch (err) {
@@ -80,12 +107,20 @@ const useDataStore = create((set) => ({
     }
   },
 
+  // ------------------ FETCH ONLY INSTITUTES ------------------
   fetchInstitutes: async () => {
     set({ loading: true });
+
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/institutes`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/institutes`
+      );
+
       set({
-        institutes: Array.isArray(res.data) ? res.data : [],
+        institutes: alphaSort(
+          Array.isArray(res.data) ? res.data : [],
+          "name"
+        ),
         loading: false,
       });
     } catch (err) {
@@ -94,12 +129,20 @@ const useDataStore = create((set) => ({
     }
   },
 
+  // ------------------ FETCH ONLY COURSES ------------------
   fetchCourses: async () => {
     set({ loading: true });
+
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/courses`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/courses`
+      );
+
       set({
-        courses: Array.isArray(res.data) ? res.data : [],
+        courses: alphaSort(
+          Array.isArray(res.data) ? res.data : [],
+          "name"
+        ),
         loading: false,
       });
     } catch (err) {

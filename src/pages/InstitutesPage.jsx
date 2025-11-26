@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ChevronDown, Filter } from "lucide-react";
 import InstituteCard from "../components/institutes/InstituteCard";
 import { SearchFilter, ActiveFilters } from "../components/common/FilterPanel";
@@ -11,46 +11,208 @@ const InstitutesPage = () => {
 
   const [filters, setFilters] = useState({
     state: "",
+    city: "",
     courseType: "",
     affiliation: "",
+    financeType: "",
+    feeRange: "",
+    naacGrade: "",
+    nirfRanked: "",
+    topOnly: false,
   });
 
+  // Fetch institutes initially
   useEffect(() => {
     if (institutes.length === 0) fetchInstitutes();
   }, [institutes.length, fetchInstitutes]);
 
-  const { searchResults, searchTerm, updateSearchTerm, clearSearch } =
-    useSearch(institutes, ["name", "location", "description"], 300);
+  // Search hook – fall back to full list if search is empty
+  const {
+    filteredData: searchedInstitutesRaw,
+    searchTerm,
+    updateSearchTerm,
+    clearSearch,
+  } = useSearch(institutes, ["name"], 300);
 
-  const filteredInstitutes = searchResults
-    .filter((inst) =>
-      filters.state ? inst.state?.toLowerCase() === filters.state : true
-    )
-    .filter((inst) =>
-      filters.courseType
-        ? inst.courseType?.toLowerCase() === filters.courseType
-        : true
-    )
-    .filter((inst) =>
-      filters.affiliation
-        ? inst.affiliation?.toLowerCase() === filters.affiliation
-        : true
-    );
+  const searchedInstitutes =
+    searchedInstitutesRaw && searchedInstitutesRaw.length
+      ? searchedInstitutesRaw
+      : institutes;
 
-  const handleFilterChange = (filterName, value) => {
+    // ---------- OPTIONS FROM DATA (dynamic + alphabetically sorted) ----------
+
+    const stateOptions = useMemo(() => {
+      const set = new Set();
+      institutes.forEach((i) => {
+        if (i.location?.state) set.add(i.location.state.trim());
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [institutes]);
+
+    const cityOptions = useMemo(() => {
+      const set = new Set();
+      institutes.forEach((i) => {
+        if (i.location?.city) set.add(i.location.city.trim());
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [institutes]);
+
+    const affiliationOptions = useMemo(() => {
+      const set = new Set();
+      institutes.forEach((i) => {
+        if (i.affilication) set.add(i.affilication.trim());
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [institutes]);
+
+    const naacOptions = useMemo(() => {
+      const set = new Set();
+      institutes.forEach((i) => {
+        i.rankings?.naac?.forEach((r) => {
+          if (r.grade) set.add(r.grade.trim());
+        });
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [institutes]);
+
+    const courseTypeOptions = useMemo(() => {
+      const set = new Set();
+      institutes.forEach((i) => {
+        i.courses?.forEach((c) => {
+          if (c.name) set.add(c.name.trim());
+        });
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [institutes]);
+
+    const financeTypeOptions = useMemo(() => {
+      const set = new Set();
+      institutes.forEach((i) => {
+        i.courses?.forEach((c) => {
+          if (c.finance_type) set.add(c.finance_type.trim());
+        });
+      });
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [institutes]);
+
+
+  // ---------- FILTER LOGIC ----------
+
+  const matchesFeeRange = (inst, feeRange) => {
+    if (!feeRange) return true;
+
+    const fees =
+      inst.courses
+        ?.map((c) => c.fees)
+        .filter((f) => typeof f === "number") || [];
+
+    if (!fees.length) return false;
+
+    const minFee = Math.min(...fees);
+
+    switch (feeRange) {
+      case "Below ₹50,000":
+        return minFee < 50000;
+      case "₹50,000 – ₹1,00,000":
+        return minFee >= 50000 && minFee <= 100000;
+      case "₹1,00,000 – ₹2,00,000":
+        return minFee > 100000 && minFee <= 200000;
+      case "Above ₹2,00,000":
+        return minFee > 200000;
+      default:
+        return true;
+    }
+  };
+
+  const filteredInstitutes = searchedInstitutes
+    .filter((inst) => {
+      if (!filters.state) return true;
+      const instState = inst.location?.state;
+      return (
+        instState &&
+        instState.toLowerCase() === filters.state.toLowerCase()
+      );
+    })
+    .filter((inst) => {
+      if (!filters.city) return true;
+      const instCity = inst.location?.city;
+      return (
+        instCity &&
+        instCity.toLowerCase() === filters.city.toLowerCase()
+      );
+    })
+    .filter((inst) => {
+      if (!filters.courseType) return true;
+      return inst.courses?.some(
+        (c) => c.name && c.name === filters.courseType
+      );
+    })
+    .filter((inst) => {
+      if (!filters.affiliation) return true;
+      const aff = inst.affilication;
+      return (
+        aff &&
+        aff.toLowerCase() === filters.affiliation.toLowerCase()
+      );
+    })
+    .filter((inst) => {
+      if (!filters.financeType) return true;
+      return inst.courses?.some(
+        (c) =>
+          c.finance_type &&
+          c.finance_type.toLowerCase() ===
+            filters.financeType.toLowerCase()
+      );
+    })
+    .filter((inst) => matchesFeeRange(inst, filters.feeRange))
+    .filter((inst) => {
+      if (!filters.naacGrade) return true;
+      return inst.rankings?.naac?.some(
+        (r) =>
+          r.grade &&
+          r.grade.toLowerCase() === filters.naacGrade.toLowerCase()
+      );
+    })
+    .filter((inst) => {
+      if (!filters.nirfRanked) return true;
+      const hasNirf = inst.rankings?.nirf?.length > 0;
+      if (filters.nirfRanked === "Has NIRF Rank") return hasNirf;
+      if (filters.nirfRanked === "No NIRF Rank") return !hasNirf;
+      return true;
+    })
+    .filter((inst) => (filters.topOnly ? inst.isTopInstitute === true : true));
+
+  // ---------- HELPERS ----------
+
+  const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
       ...prev,
-      [filterName]: value,
+      [key]: value,
     }));
   };
 
   const handleClearFilters = () => {
-    setFilters({ state: "", courseType: "", affiliation: "" });
+    setFilters({
+      state: "",
+      city: "",
+      courseType: "",
+      affiliation: "",
+      financeType: "",
+      feeRange: "",
+      naacGrade: "",
+      nirfRanked: "",
+      topOnly: false,
+    });
     clearSearch();
   };
 
   const hasActiveFilters =
-    filters.state || filters.courseType || filters.affiliation || searchTerm;
+    !!searchTerm ||
+    Object.entries(filters).some(([key, value]) =>
+      key === "topOnly" ? value === true : value !== ""
+    );
+
+  // ---------- LOADING STATE ----------
 
   if (loading) {
     return (
@@ -64,6 +226,8 @@ const InstitutesPage = () => {
       </div>
     );
   }
+
+  // ---------- UI ----------
 
   return (
     <div className="min-h-screen pb-16">
@@ -84,7 +248,7 @@ const InstitutesPage = () => {
         <SearchFilter
           value={searchTerm}
           onChange={updateSearchTerm}
-          placeholder="Search institutes by name, location..."
+          placeholder="Search institutes by name..."
           className="max-w-md"
         />
       </div>
@@ -96,7 +260,7 @@ const InstitutesPage = () => {
             {filteredInstitutes.length} institutes found
           </h3>
           <button
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => setShowFilters((prev) => !prev)}
             className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <Filter className="w-4 h-4 mr-1" />
@@ -113,25 +277,52 @@ const InstitutesPage = () => {
         {showFilters && (
           <div className="mt-4 p-4 bg-white rounded-lg shadow-md border border-gray-100 animate-slideDown">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* State */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   State
                 </label>
                 <select
                   value={filters.state}
-                  onChange={(e) => handleFilterChange("state", e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("state", e.target.value)
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All States</option>
-                  <option value="maharashtra">Maharashtra</option>
-                  <option value="gujarat">Gujarat</option>
-                  <option value="delhi">Delhi</option>
+                  {stateOptions.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
                 </select>
               </div>
 
+              {/* City */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Course Type
+                  City
+                </label>
+                <select
+                  value={filters.city}
+                  onChange={(e) =>
+                    handleFilterChange("city", e.target.value)
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Cities</option>
+                  {cityOptions.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Course (from courses.name) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Course
                 </label>
                 <select
                   value={filters.courseType}
@@ -140,13 +331,16 @@ const InstitutesPage = () => {
                   }
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">All Types</option>
-                  <option value="engineering">Engineering</option>
-                  <option value="medical">Medical</option>
-                  <option value="management">Management</option>
+                  <option value="">All Courses</option>
+                  {courseTypeOptions.map((course) => (
+                    <option key={course} value={course}>
+                      {course}
+                    </option>
+                  ))}
                 </select>
               </div>
 
+              {/* Affiliation (affilication) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Affiliation
@@ -159,10 +353,115 @@ const InstitutesPage = () => {
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Any Affiliation</option>
-                  <option value="aicte">AICTE</option>
-                  <option value="ugc">UGC</option>
-                  <option value="autonomous">Autonomous</option>
+                  {affiliationOptions.map((aff) => (
+                    <option key={aff} value={aff}>
+                      {aff}
+                    </option>
+                  ))}
                 </select>
+              </div>
+
+              {/* Finance Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Finance Type
+                </label>
+                <select
+                  value={filters.financeType}
+                  onChange={(e) =>
+                    handleFilterChange("financeType", e.target.value)
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Any</option>
+                  {financeTypeOptions.map((ft) => (
+                    <option key={ft} value={ft}>
+                      {ft}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Fee Range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Minimum Fee (per year)
+                </label>
+                <select
+                  value={filters.feeRange}
+                  onChange={(e) =>
+                    handleFilterChange("feeRange", e.target.value)
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Any</option>
+                  <option value="Below ₹50,000">Below ₹50,000</option>
+                  <option value="₹50,000 – ₹1,00,000">
+                    ₹50,000 – ₹1,00,000
+                  </option>
+                  <option value="₹1,00,000 – ₹2,00,000">
+                    ₹1,00,000 – ₹2,00,000
+                  </option>
+                  <option value="Above ₹2,00,000">Above ₹2,00,000</option>
+                </select>
+              </div>
+
+              {/* NAAC Grade */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  NAAC Grade
+                </label>
+                <select
+                  value={filters.naacGrade}
+                  onChange={(e) =>
+                    handleFilterChange("naacGrade", e.target.value)
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Any</option>
+                  {naacOptions.map((grade) => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* NIRF Ranked */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  NIRF Ranking
+                </label>
+                <select
+                  value={filters.nirfRanked}
+                  onChange={(e) =>
+                    handleFilterChange("nirfRanked", e.target.value)
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Any</option>
+                  <option value="Has NIRF Rank">Has NIRF Rank</option>
+                  <option value="No NIRF Rank">No NIRF Rank</option>
+                </select>
+              </div>
+
+              {/* Top Institutes only */}
+              <div className="flex items-center mt-2 md:mt-6">
+                <input
+                  id="topOnly"
+                  type="checkbox"
+                  checked={filters.topOnly}
+                  onChange={(e) =>
+                    handleFilterChange("topOnly", e.target.checked)
+                  }
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="topOnly"
+                  className="ml-2 text-sm font-medium text-gray-700"
+                >
+                  Show only Top Institutes
+                </label>
               </div>
             </div>
           </div>
@@ -174,15 +473,31 @@ const InstitutesPage = () => {
             <ActiveFilters
               filters={{
                 state: filters.state,
+                city: filters.city,
                 courseType: filters.courseType,
                 affiliation: filters.affiliation,
+                financeType: filters.financeType,
+                feeRange: filters.feeRange,
+                naacGrade: filters.naacGrade,
+                nirfRanked: filters.nirfRanked,
+                topOnly: filters.topOnly ? "Top Institutes" : "",
               }}
               filterLabels={{
                 state: "State",
-                courseType: "Course Type",
+                city: "City",
+                courseType: "Course",
                 affiliation: "Affiliation",
+                financeType: "Finance Type",
+                feeRange: "Fee Range",
+                naacGrade: "NAAC Grade",
+                nirfRanked: "NIRF",
+                topOnly: "Top Institutes",
               }}
-              onRemoveFilter={(key) => handleFilterChange(key, "")}
+              onRemoveFilter={(key) =>
+                key === "topOnly"
+                  ? handleFilterChange("topOnly", false)
+                  : handleFilterChange(key, "")
+              }
               onClearAll={handleClearFilters}
             />
           </div>

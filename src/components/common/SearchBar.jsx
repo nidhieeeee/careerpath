@@ -13,6 +13,7 @@ const SearchBar = () => {
     institutes: [],
     articles: [],
   });
+
   const { performSearch } = useSearch();
   const { courses, institutes, articles } = useDataStore();
   const navigate = useNavigate();
@@ -26,7 +27,6 @@ const SearchBar = () => {
 
     const q = query.toLowerCase();
 
-    // Search across all categories
     const matchedCourses = (courses || [])
       .filter(
         (c) =>
@@ -64,10 +64,8 @@ const SearchBar = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-
     if (query.trim() === "") return;
 
-    // Run the search using data from the global store
     try {
       await performSearch(query);
     } catch (err) {
@@ -80,6 +78,7 @@ const SearchBar = () => {
     setShowSuggestions(false);
   };
 
+  // ✅ UPDATED: map to detail routes defined in App.jsx
   const handleSuggestionClick = async (item, type) => {
     try {
       await performSearch(item.name || item.title);
@@ -87,13 +86,12 @@ const SearchBar = () => {
       console.error("Search error:", err);
     }
 
-    // Navigate to detail page or search results
     if (type === "course") {
-      navigate(`/courses?search=${encodeURIComponent(item.name)}`);
+      navigate(`/courses/${item._id}`);
     } else if (type === "institute") {
-      navigate(`/institutes?search=${encodeURIComponent(item.name)}`);
+      navigate(`/institutes/${item._id}`);
     } else if (type === "article") {
-      navigate(`/articles?search=${encodeURIComponent(item.title)}`);
+      navigate(`/articles/${item._id}`);
     }
 
     setQuery("");
@@ -141,7 +139,11 @@ const SearchBar = () => {
                 type="button"
                 onClick={() => {
                   setQuery("");
-                  setSuggestions({ courses: [], institutes: [], articles: [] });
+                  setSuggestions({
+                    courses: [],
+                    institutes: [],
+                    articles: [],
+                  });
                   document.getElementById("search-input")?.focus();
                 }}
                 className="mr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -180,7 +182,9 @@ const SearchBar = () => {
                     {suggestions.courses.map((course) => (
                       <button
                         key={course._id}
-                        onClick={() => handleSuggestionClick(course, "course")}
+                        onClick={() =>
+                          handleSuggestionClick(course, "course")
+                        }
                         className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 transition text-sm text-gray-700 hover:text-blue-600"
                       >
                         <div className="font-medium">{course.name}</div>
