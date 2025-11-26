@@ -15,7 +15,7 @@ const Header = () => {
     { label: 'Courses', path: '/courses' },
     { label: 'Institutes', path: '/institutes' },
     { label: 'Merit List', path: '/merit-list' },
-    { label: 'Articles', path: '/articles' },
+    { label: "Student's Section", path: '/articles' },
     { label: 'Contact', path: '/contact' },
     { label: 'Exams' , path: '/exam'},
     { label: 'Admissions Guide', path: '/guidance' },
