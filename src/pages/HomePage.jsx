@@ -1,33 +1,25 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Search, 
-  GraduationCap, 
-  BookOpen, 
-  Building, 
-  FileText, 
   TrendingUp, 
-  School, 
-  FileCheck 
+  Building, 
+  FileCheck,
+  FileText
 } from 'lucide-react';
-import SearchBar from '../components/common/SearchBar';
 import CourseCard from '../components/courses/CourseCard';
 import InstituteCard from '../components/institutes/InstituteCard';
 import ArticleCard from '../components/articles/ArticleCard';
 import MeritListCard from '../components/meritList/MeritListCard';
 import HeroSection from '../components/common/Hero';
 import useDataStore from '../store/useDataStore';
-import { useEffect } from 'react';
 
-// Mock data - in a real app, this would come from an API
-import { trendingCourses, topInstitutes, latestMeritLists, latestArticles } from '../data/mockData';
+// Mock data for fallback or initial render - in a real app, this would be empty
+import { latestMeritLists, latestArticles } from '../data/mockData';
 
 const HomePage = () => {
-    const {
+  const {
     courses,
-    institutes,
     topInstitutes,
-    articles,
     fetchAllData,
     loading,
     error
@@ -35,85 +27,60 @@ const HomePage = () => {
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [fetchAllData]);
 
-  if (loading)
-  return (
-    <div className="h-screen flex items-center justify-center bg-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-blue-600 text-lg font-semibold">Loading, please wait...</p>
-      </div>
-    </div>
-  );
+  // --- NEW LOGIC TO SORT COURSES BY POPULARITY ---
+  const trendingCourses = useMemo(() => {
+    // Define the order of popularity
+    const popularityOrder = {
+      high: 3,
+      moderate: 2,
+      low: 1,
+    };
 
-  if (error)
-  return (
-    <div className="h-screen flex items-center justify-center bg-white">
-      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md max-w-md text-center">
-        <strong className="font-semibold">Oops! Something went wrong.</strong>
-        <p className="mt-2">{error}</p>
+    if (!courses || courses.length === 0) {
+      return [];
+    }
+
+    // Create a copy of the courses array to avoid mutating the original state
+    const sortedCourses = [...courses].sort((a, b) => {
+      // Get the numerical value for each course's popularity, defaulting to 0 if not present
+      const popularityA = popularityOrder[a.popularity?.toLowerCase()] || 0;
+      const popularityB = popularityOrder[b.popularity?.toLowerCase()] || 0;
+      // Sort in descending order (High > Moderate > Low)
+      return popularityB - popularityA;
+    });
+
+    // Return only the top 10 trending courses
+    return sortedCourses.slice(0, 10);
+  }, [courses]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-blue-600 text-lg font-semibold">Loading, please wait...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md max-w-md text-center">
+          <strong className="font-semibold">Oops! Something went wrong.</strong>
+          <p className="mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      {/* <section className="relative bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16 md:py-24">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
-            Confused about your career path?
-          </h1>
-          <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
-            Explore courses, colleges, and career options to make informed decisions about your future.
-          </p>
-          <div className="w-[95vw] flex justify-center">
-            <div className="max-w-md">
-              <SearchBar />
-            </div>
-          </div>
-
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
-            <Link
-              to="/after-12th"
-              className="bg-white bg-opacity-10 hover:bg-opacity-20 rounded-lg p-4 transition-all transform hover:scale-105"
-            >
-              <GraduationCap className="w-8 h-8 mx-auto mb-2" />
-              <span className="block text-sm font-medium">After 12th</span>
-            </Link>
-            <Link
-              to="/after-graduation"
-              className="bg-white bg-opacity-10 hover:bg-opacity-20 rounded-lg p-4 transition-all transform hover:scale-105"
-            >
-              <BookOpen className="w-8 h-8 mx-auto mb-2" />
-              <span className="block text-sm font-medium">After Graduation</span>
-            </Link>
-            <Link
-              to="/courses"
-              className="bg-white bg-opacity-10 hover:bg-opacity-20 rounded-lg p-4 transition-all transform hover:scale-105"
-            >
-              <School className="w-8 h-8 mx-auto mb-2" />
-              <span className="block text-sm font-medium">All Courses</span>
-            </Link>
-            <Link
-              to="/institutes"
-              className="bg-white bg-opacity-10 hover:bg-opacity-20 rounded-lg p-4 transition-all transform hover:scale-105"
-            >
-              <Building className="w-8 h-8 mx-auto mb-2" />
-              <span className="block text-sm font-medium">Institutes</span>
-            </Link>
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 to-transparent"></div>
-      </section> */}
-
-      <HeroSection/>
-
-      {/* Sticky Search on Mobile */}
-      <div className="md:hidden sticky top-0 z-30 bg-white shadow-md p-3">
-        <SearchBar />
-      </div>
+      <HeroSection />
 
       {/* Trending Courses */}
       <section className="py-10 px-4">
@@ -132,11 +99,15 @@ const HomePage = () => {
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
             <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
-              {courses?.map((course) => (
-                <div key={course._id} className="w-72 flex-shrink-0">
-                  <CourseCard course={course} />
-                </div>
-              ))}
+              {trendingCourses.length > 0 ? (
+                trendingCourses.map((course) => (
+                  <div key={course._id} className="w-72 flex-shrink-0">
+                    <CourseCard course={course} />
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">No trending courses available at the moment.</p>
+              )}
             </div>
           </div>
         </div>
@@ -159,11 +130,15 @@ const HomePage = () => {
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
             <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
-              {topInstitutes.map((institute) => (
-                <div key={institute._id} className="w-72 flex-shrink-0">
-                  <InstituteCard institute={institute} />
-                </div>
-              ))}
+              {topInstitutes.length > 0 ? (
+                topInstitutes.map((institute) => (
+                  <div key={institute._id} className="w-72 flex-shrink-0">
+                    <InstituteCard institute={institute} />
+                  </div>
+                ))
+              ) : (
+                 <p className="text-gray-500">No top institutes available at the moment.</p>
+              )}
             </div>
           </div>
         </div>

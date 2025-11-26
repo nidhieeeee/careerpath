@@ -6,19 +6,21 @@ import { useSearch } from '../../context/SearchContext';
 const SearchBar = () => {
   const [query, setQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const { setSearchResults } = useSearch();
+  const { performSearch } = useSearch();
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    
+
     if (query.trim() === '') return;
 
-    setSearchResults({
-      query,
-      // Simulated results would go here
-    });
-    
+    // Run the search using data from the global store (may fetch data if needed)
+    try {
+      await performSearch(query);
+    } catch (err) {
+      // ignore search errors; navigation still proceeds
+    }
+
     navigate(`/search?q=${encodeURIComponent(query)}`);
     setQuery('');
     setIsExpanded(false);
