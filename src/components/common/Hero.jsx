@@ -2,16 +2,16 @@ import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import SearchBar from "./SearchBar";
 import { Link } from "react-router-dom";
-import { 
-  Search, 
-  GraduationCap, 
-  BookOpen, 
-  Building, 
-  FileText, 
-  TrendingUp, 
-  School, 
-  FileCheck 
-} from 'lucide-react';
+import {
+  Search,
+  GraduationCap,
+  BookOpen,
+  Building,
+  FileText,
+  TrendingUp,
+  School,
+  FileCheck,
+} from "lucide-react";
 
 const floatingTexts = [
   { text: "B.Tech", x: -750, y: -120, depth: 30 },
@@ -28,7 +28,7 @@ const floatingTexts = [
   { text: "B.Ed", x: 520, y: 230, depth: 30 },
   { text: "DIPLOMA", x: 750, y: -60, depth: 25 },
   { text: "B.Tech", x: -680, y: 40, depth: 20 },
-//   { text: "M.Tech", x: 580, y: -40, depth: 22 },
+  //   { text: "M.Tech", x: 580, y: -40, depth: 22 },
   { text: "B.A", x: -550, y: 0, depth: 27 },
   { text: "M.A", x: 650, y: 80, depth: 26 },
   { text: "B.Tech", x: -400, y: 80, depth: 15 },
@@ -73,7 +73,6 @@ const floatingTexts = [
   { text: "MBA", x: -300, y: -250, depth: 24 },
 ];
 
-
 // const floatingTexts = [
 //   { text: "BSc in Computer Science", x: -750, y: -120, depth: 30 },
 //   { text: "MSc in Data Science", x: -620, y: 200, depth: 22 },
@@ -101,7 +100,6 @@ const floatingTexts = [
 //   { text: "BA in Economics", x: 0, y: 0, depth: 26 },
 //   { text: "BCom in Accounting", x: 750, y: 220, depth: 22 },
 // ];
-
 
 export default function HeroSection() {
   const containerRef = useRef(null);
@@ -194,10 +192,11 @@ export default function HeroSection() {
             Confused about your career path?
           </h1>
           <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
-            Explore courses, colleges, and career options to make informed decisions about your future.
+            Explore courses, colleges, and career options to make informed
+            decisions about your future.
           </p>
-          <div className=" flex justify-center">
-            <div className="max-w-md">
+          <div className="flex justify-center pointer-events-none">
+            <div className="max-w-md pointer-events-auto">
               <SearchBar />
             </div>
           </div>

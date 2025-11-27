@@ -27,6 +27,7 @@ import ContactPage from "./pages/ContactPage";
 import SearchResult from "./pages/SearchResult";
 import ExamsPage from "./pages/ExamPage";
 import AdmissionsGuide from "./pages/guidancePage.jsx";
+import HelpDeskPage from "./pages/HelpDeskPage";
 
 // Admin Components
 import Adminlogin from "./components/admin/Adminlogin";
@@ -217,6 +218,14 @@ const App = () => {
             element={
               <LayoutWrapper>
                 <ExamsPage />
+              </LayoutWrapper>
+            }
+          />
+          <Route
+            path="/helpdesk"
+            element={
+              <LayoutWrapper>
+                <HelpDeskPage />
               </LayoutWrapper>
             }
           />

@@ -100,8 +100,15 @@ const SearchBar = () => {
   };
 
   const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-    if (!isExpanded) {
+    if (isExpanded) {
+      // Collapse the search box
+      setIsExpanded(false);
+      setShowSuggestions(false);
+      setQuery("");
+      setSuggestions({ courses: [], institutes: [], articles: [] });
+    } else {
+      // Expand the search box
+      setIsExpanded(true);
       setTimeout(() => {
         document.getElementById("search-input")?.focus();
       }, 100);
@@ -116,15 +123,18 @@ const SearchBar = () => {
   return (
     <div className="relative w-full">
       <div
-        className={`flex items-center transition-all duration-300 bg-white rounded-full border ${
+        className={`flex items-center transition-all duration-300 ease-in-out bg-white rounded-full border shadow-sm ${
           isExpanded
-            ? "w-full md:w-96 border-blue-400 shadow-lg"
-            : "w-full md:w-64 border-gray-200"
+            ? "w-full md:w-96 border-blue-500 shadow-lg ring-2 ring-blue-200"
+            : "w-full md:w-64 border-gray-200 hover:border-gray-300 hover:shadow-md"
         }`}
       >
         {isExpanded ? (
-          <form onSubmit={handleSearch} className="w-full flex items-center">
-            <Search className="ml-4 text-blue-500 h-5 w-5 flex-shrink-0" />
+          <form
+            onSubmit={handleSearch}
+            className="w-full flex items-center animate-slideIn"
+          >
+            <Search className="ml-4 text-blue-500 h-5 w-5 flex-shrink-0 transition-all duration-300" />
             <input
               id="search-input"
               type="text"
@@ -147,7 +157,16 @@ const SearchBar = () => {
                   });
                   document.getElementById("search-input")?.focus();
                 }}
-                className="mr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                className="mr-3 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-200 hover:bg-gray-100 p-1 rounded-full"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+            {!query && (
+              <button
+                type="button"
+                onClick={toggleExpand}
+                className="mr-3 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-200 hover:bg-gray-100 p-1 rounded-full"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -156,10 +175,10 @@ const SearchBar = () => {
         ) : (
           <button
             onClick={toggleExpand}
-            className="flex items-center justify-center md:justify-start w-full h-10 px-4 text-sm text-gray-500 focus:outline-none hover:text-blue-500 transition"
+            className="flex items-center justify-center md:justify-start w-full h-10 px-4 text-sm text-gray-500 focus:outline-none hover:text-blue-500 transition-all duration-300 hover:bg-blue-50 rounded-full"
           >
-            <Search className="h-5 w-5 flex-shrink-0" />
-            <span className="hidden md:block ml-3">
+            <Search className="h-5 w-5 flex-shrink-0 transition-all duration-300" />
+            <span className="hidden md:block ml-3 transition-all duration-300">
               Search courses, colleges...
             </span>
           </button>
@@ -171,7 +190,7 @@ const SearchBar = () => {
         showSuggestions &&
         query.trim() !== "" &&
         totalSuggestions > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-w-md md:max-w-96">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-w-md md:max-w-96 animate-fadeIn">
             <div className="max-h-96 overflow-y-auto">
               {/* Courses */}
               {suggestions.courses.length > 0 && (
@@ -183,9 +202,7 @@ const SearchBar = () => {
                     {suggestions.courses.map((course) => (
                       <button
                         key={course._id}
-                        onClick={() =>
-                          handleSuggestionClick(course, "course")
-                        }
+                        onClick={() => handleSuggestionClick(course, "course")}
                         className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 transition text-sm text-gray-700 hover:text-blue-600"
                       >
                         <div className="font-medium">{course.name}</div>
