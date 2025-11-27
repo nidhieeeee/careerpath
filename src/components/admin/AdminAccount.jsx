@@ -16,12 +16,12 @@ export default function AdminAccount() {
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: "John Admin",
+    name: "Admin User",
     email: "admin@careerpath.com",
-    phone: "+1 (555) 123-4567",
-    location: "New York, USA",
+    phone: "+91 1234567890",
+    location: "Ahmedabad, India",
     role: "Super Administrator",
-    joinDate: "January 2023",
+    joinDate: "January 2025",
     profileImage: "/api/placeholder/150/150",
   });
 

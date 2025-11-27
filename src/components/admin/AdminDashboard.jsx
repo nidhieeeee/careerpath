@@ -584,7 +584,7 @@ export default function AdminDashboard() {
                 </span>
               </label>
               <a
-                href="/sample-subadmin-template.xlsx"
+                href="/institute_subadmins_template.xlsx"
                 download
                 className="text-blue-600 underline text-sm font-medium hover:text-blue-900"
               >
