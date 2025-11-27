@@ -20,6 +20,8 @@ const HomePage = () => {
   const {
     courses,
     topInstitutes,
+    articles,
+    meritLists,
     fetchAllData,
     loading,
     error
@@ -183,7 +185,7 @@ const HomePage = () => {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latestArticles.slice(0, 3).map((article) => (
+            {articles.slice(0, 3).map((article) => (
               <ArticleCard key={article.id} article={article} />
             ))}
           </div>

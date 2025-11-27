@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 
 const navItems = [
   { label: "Institutes", path: "/admin/institutes" },
-  // { label: "Courses", path: "/admin/courses" },
+  { label: "Courses", path: "/admin/courses" },
   { label: "Articles", path: "/admin/articles" },
   { label: "Merit Lists", path: "/admin/meritlists" },
 ];

@@ -132,7 +132,8 @@ const SearchBar = () => {
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
               placeholder="Search courses, colleges, articles..."
-              className="w-full py-3 px-4 text-sm bg-transparent border-none focus:outline-none"
+              className="w-full py-3 px-4 text-sm bg-transparent border-none focus:outline-none
+                        text-gray-900 placeholder:text-gray-400"
             />
             {query && (
               <button

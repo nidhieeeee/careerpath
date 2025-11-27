@@ -35,6 +35,7 @@ import AdminInstitute from "./components/admin/AdminInstitute";
 import AdminArticles from "./components/admin/AdminArticles";
 import AdminAccount from "./components/admin/AdminAccount";
 import MeritListAdmin from "./components/admin/AdminMerit";
+import AdminCourses from "./components/admin/AdminCourses";
 
 // SubAdmin Components
 import SubAdminDashboard from "./components/admin/sub/SubAdminDashboard";
@@ -100,6 +101,7 @@ const App = () => {
           <Route path="/admin/institutes" element={<AdminInstitute />} />
           <Route path="/admin/articles" element={<AdminArticles />} />
           <Route path="/admin/meritlists" element={<MeritListAdmin />} />
+          <Route path="/admin/courses" element={<AdminCourses />} />
 
           {/* SubAdmin Routes (WITHOUT Layout) */}
           <Route path="/subadmin/dashboard" element={<SubAdminDashboard />} />

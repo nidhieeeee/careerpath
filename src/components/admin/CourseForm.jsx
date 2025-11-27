@@ -1,122 +1,118 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 
-const CourseForm = ({ data, setData, editIndex, formData, setFormData, setEditIndex }) => {
+const initialFormState = {
+  courseId: "",
+  name: "",
+  duration: "",
+  popularity: "",
+  type: "",
+  stream: "",
+};
+
+const CourseForm = ({ initialData, onSubmit, onCancel, isSubmitting }) => {
+  const [formData, setFormData] = useState(initialFormState);
+
+  const isEditMode = !!initialData;
+
   useEffect(() => {
-    if (editIndex !== null) {
-      setFormData(data[editIndex]);
+    if (initialData) {
+      setFormData({
+        ...initialFormState,
+        ...initialData,
+      });
     } else {
-      setFormData({});
+      setFormData(initialFormState);
     }
-  }, [editIndex, data]);
+  }, [initialData]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files?.length ? URL.createObjectURL(files[0]) : value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const updated = [...data];
-    if (editIndex !== null) {
-      updated[editIndex] = formData;
-    } else {
-      updated.push(formData);
-    }
-    setData(updated);
-    setFormData({});
-    setEditIndex(null);
-    alert(editIndex !== null ? "Course updated successfully!" : "Course added successfully!");
+    onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow-md">
-      <h2 className="text-2xl font-bold mb-10 text-center">{editIndex !== null ? "Edit" : "Add"} Course</h2>
-
-      <div>
-        <label className="block mb-1 font-medium">Course Title</label>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Basic Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input
-          name="title"
-          value={formData.title || ''}
+          name="courseId"
+          placeholder="Course ID (unique)"
+          value={formData.courseId}
           onChange={handleChange}
-          placeholder="Course Title"
-          className="w-full p-2 border border-blue-300 rounded"
           required
+          className="p-2 border rounded"
         />
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Description</label>
-        <textarea
-          name="description"
-          value={formData.description || ''}
+        <input
+          name="name"
+          placeholder="Course Name"
+          value={formData.name}
           onChange={handleChange}
-          placeholder="Course Description"
-          rows={3}
-          className="w-full p-2 border border-blue-300 rounded"
           required
+          className="p-2 border rounded"
         />
-      </div>
 
-      <div>
-        <label className="block mb-1 font-medium">Category</label>
-        <select
-          name="category"
-          value={formData.category || ''}
+        <input
+          name="duration"
+          placeholder="Duration (e.g. 4 Years)"
+          value={formData.duration}
           onChange={handleChange}
-          className="w-full p-2 border border-blue-300 rounded"
           required
-        >
-          <option value="">Select Category</option>
-          <option value="UG">UG</option>
-          <option value="PG">PG</option>
-          <option value="Diploma">Diploma</option>
-        </select>
-      </div>
+          className="p-2 border rounded"
+        />
+        <input
+          name="popularity"
+          placeholder="Popularity (e.g. High, Medium, Low)"
+          value={formData.popularity}
+          onChange={handleChange}
+          className="p-2 border rounded"
+        />
 
-      <div>
-        <label className="block mb-1 font-medium">Stream</label>
-        <select
+        <input
+          name="type"
+          placeholder="Type (e.g. UG, PG, Diploma)"
+          value={formData.type}
+          onChange={handleChange}
+          className="p-2 border rounded"
+        />
+        <input
           name="stream"
-          value={formData.stream || ''}
+          placeholder="Stream (e.g. Engineering, Management)"
+          value={formData.stream}
           onChange={handleChange}
-          className="w-full p-2 border border-blue-300 rounded"
-          required
+          className="p-2 border rounded"
+        />
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-4 pt-4 border-t">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-lg disabled:bg-indigo-400"
         >
-          <option value="">Select Stream</option>
-          <option value="Science">Science</option>
-          <option value="Commerce">Commerce</option>
-          <option value="Arts">Arts</option>
-        </select>
+          {isSubmitting
+            ? "Saving..."
+            : isEditMode
+            ? "Update Course"
+            : "Create Course"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-6 py-2 rounded-lg"
+        >
+          Cancel
+        </button>
       </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Course Link</label>
-        <input
-          name="link"
-          value={formData.link || ''}
-          onChange={handleChange}
-          placeholder="Course Link (optional)"
-          className="w-full p-2 border border-blue-300 rounded"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Photo</label>
-        <input
-          type="file"
-          name="photo"
-          accept="image/*"
-          onChange={handleChange}
-          className="w-full p-2 border border-blue-300 rounded"
-        />
-      </div>
-
-      <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded">
-        {editIndex !== null ? 'Update' : 'Submit'}
-      </button>
     </form>
   );
 };

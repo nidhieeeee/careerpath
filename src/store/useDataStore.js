@@ -95,10 +95,11 @@ const useDataStore = create((set) => ({
           Array.isArray(articlesRes.data) ? articlesRes.data : [],
           "title"
         ),
-        topInstitutes: alphaSort(
-          Array.isArray(topInstitutesRes.data) ? topInstitutesRes.data : [],
-          "name"
-        ),
+        topInstitutes: topInstitutesRes.data,
+        // topInstitutes: alphaSort(
+        //   Array.isArray(topInstitutesRes.data) ? topInstitutesRes.data : [],
+        //   "name"
+        // ),
         loading: false,
       });
     } catch (err) {
