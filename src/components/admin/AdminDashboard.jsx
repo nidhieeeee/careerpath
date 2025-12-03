@@ -133,7 +133,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_BASE_URL}/api/auth/register`,
+        `${import.meta.env.VITE_BASE_URL}/auth/register`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

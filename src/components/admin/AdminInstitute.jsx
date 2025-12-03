@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import useDataStore from "../../store/useDataStore";
 import AdminNavbar from "../../components/admin/AdminNavbar";
 import InstituteForm from "../../components/admin/InstituteForm";
 import InstituteTable from "../../components/admin/InstituteTable";
 import UnauthorizedAccess from "../../components/admin/UnauthorizedAccess";
-import { Plus, List } from "lucide-react";
+import { Plus, List, Search } from "lucide-react";
 import axios from "../../components/api/axios";
 import { toast } from "react-toastify";
 
@@ -17,6 +17,7 @@ const AdminInstitutes = () => {
   const [view, setView] = useState("list");
   const [editingInstitute, setEditingInstitute] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // <-- search state
   const topRef = useRef(null);
 
   // Initialize auth and fetch data on component mount
@@ -76,6 +77,31 @@ const AdminInstitutes = () => {
     }
   };
 
+  // Derived filtered list based on search term
+  const filteredInstitutes = useMemo(() => {
+    if (!searchTerm?.trim()) return institutes;
+
+    const q = searchTerm.toLowerCase();
+
+    return (institutes || []).filter((inst) => {
+      const fields = [
+        inst?.name,
+        inst?.location?.city,
+        inst?.location?.state,
+        inst?.website,
+        inst?.affilication,
+        inst?.contact?.instituteEmail,
+        inst?.contact?.instituteMobile,
+      ];
+
+      return fields.some(
+        (field) =>
+          typeof field === "string" &&
+          field.toLowerCase().includes(q)
+      );
+    });
+  }, [searchTerm, institutes]);
+
   // Authorization check
   if (role === null) {
     // Show a blank loading screen while the role is being determined
@@ -98,25 +124,42 @@ const AdminInstitutes = () => {
           {view === "list" ? (
             // --- LIST VIEW ---
             <div>
-              <header className="flex items-center justify-between mb-8">
-                <div>
+              <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+                <div className="flex-1">
                   <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                     Institute Management
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">
-                    Browse, add, and edit institute details.
+                    Browse, search, add, and edit institute details.
                   </p>
+
+                  {/* Search Bar */}
+                  <div className="mt-4 max-w-md">
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-gray-400" />
+                      </span>
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search by name, city, email, etc."
+                        className="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
+
                 <button
                   onClick={() => showFormView()}
-                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow-sm"
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg shadow-sm self-start"
                 >
                   <Plus size={20} /> Add Institute
                 </button>
               </header>
               <main>
                 <InstituteTable
-                  institutes={institutes}
+                  institutes={filteredInstitutes}
                   loading={loading}
                   onEdit={showFormView} // Pass handler to switch views
                   onDelete={handleDelete}
