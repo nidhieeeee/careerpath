@@ -3,7 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import useDataStore from "../../store/useDataStore";
+import { useAuth } from "../../context/AuthContext";
 import AdminNavbar from "../../components/admin/AdminNavbar";
+import {
+  StatsCardSkeleton,
+  FormSkeleton,
+  TableRowSkeleton,
+} from "../../components/common/SkeletonLoaders";
 
 import {
   AcademicCapIcon,
@@ -68,6 +74,7 @@ const colorMap = {
 export default function AdminDashboard() {
   const [stats, setStats] = useState(skeletonStats);
   const { isLoggedIn } = useDataStore();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [uploadSummary, setUploadSummary] = useState(null);
@@ -90,22 +97,55 @@ export default function AdminDashboard() {
     },
   });
 
+  // Check authentication and redirect if needed
+  useEffect(() => {
+    if (!isLoggedIn && !isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isLoggedIn, isAuthenticated, navigate]);
+
   // Fetch institutes for dropdown
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_BASE_URL}/institutes`)
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      sessionStorage.getItem("token") ||
+      sessionStorage.getItem("authToken");
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(`${import.meta.env.VITE_BASE_URL}/institutes`, { headers })
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
         setInstitutes(data);
       })
-      .catch(() => toast.error("Failed to fetch institutes"));
+      .catch((err) => {
+        console.error("Failed to fetch institutes:", err);
+        toast.error("Failed to fetch institutes");
+      });
   }, []);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_BASE_URL}/auth/subadmins`)
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      sessionStorage.getItem("token") ||
+      sessionStorage.getItem("authToken");
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(`${import.meta.env.VITE_BASE_URL}/auth/subadmins`, { headers })
       .then((res) => res.json())
-      .then((data) => setSubAdmins(data))
-      .catch(() => toast.error("Failed to fetch sub-admins"));
+      .then((data) => {
+        // Handle both array and object with data property
+        const subAdminList = Array.isArray(data) ? data : data?.data || [];
+        setSubAdmins(subAdminList);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch sub-admins:", err);
+        toast.error("Failed to fetch sub-admins");
+      });
   }, []);
 
   // Form handlers
@@ -132,23 +172,47 @@ export default function AdminDashboard() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BASE_URL}/api/auth/register`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: form.name,
-            email: form.email,
-            password: form.password,
-            institute: form.institute,
-            permissions: form.permissions,
-          }),
-        }
-      );
+      const baseUrl =
+        import.meta.env.VITE_BASE_URL || "http://localhost:5000/api";
+
+      // Get authentication token
+      const token =
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken") ||
+        sessionStorage.getItem("token") ||
+        sessionStorage.getItem("authToken");
+
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      const res = await fetch(`${baseUrl}/auth/register`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          institute: form.institute,
+          permissions: form.permissions,
+        }),
+      });
       const data = await res.json();
       if (res.ok) {
         toast.success("Sub-admin created successfully");
+
+        // Refresh the subadmins list
+        const subAdminsRes = await fetch(`${baseUrl}/auth/subadmins`, {
+          headers,
+        });
+        const subAdminsData = await subAdminsRes.json();
+        const subAdminList = Array.isArray(subAdminsData)
+          ? subAdminsData
+          : subAdminsData?.data || [];
+        setSubAdmins(subAdminList);
+
+        // Reset form
         setForm({
           institute: "",
           name: "",
@@ -166,7 +230,8 @@ export default function AdminDashboard() {
       } else {
         toast.error(data.error || "Failed to create sub-admin");
       }
-    } catch {
+    } catch (err) {
+      console.error("Error creating sub-admin:", err);
       toast.error("Server error");
     }
   };
@@ -400,19 +465,23 @@ export default function AdminDashboard() {
 
           {/* Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            {stats.map((stat, idx) => (
-              <div
-                key={stat.label}
-                className={`rounded-2xl shadow-lg p-6 flex flex-col items-center ${stat.color}`}
-              >
-                <stat.icon className="w-10 h-10 mb-2" />
-                <div className="text-3xl font-extrabold mb-1">
-                  {stat.value !== null ? stat.value : "00"}
+            {stats.map((stat, idx) =>
+              stat.loading ? (
+                <StatsCardSkeleton key={idx} />
+              ) : (
+                <div
+                  key={stat.label}
+                  className={`rounded-2xl shadow-lg p-6 flex flex-col items-center ${stat.color}`}
+                >
+                  <stat.icon className="w-10 h-10 mb-2" />
+                  <div className="text-3xl font-extrabold mb-1">
+                    {stat.value !== null ? stat.value : "00"}
+                  </div>
+                  <div className="font-semibold text-lg mb-1">{stat.label}</div>
+                  <div className="text-sm text-gray-600">{stat.desc}</div>
                 </div>
-                <div className="font-semibold text-lg mb-1">{stat.label}</div>
-                <div className="text-sm text-gray-600">{stat.desc}</div>
-              </div>
-            ))}
+              )
+            )}
           </div>
 
           {/* Add Sub-Admin Form */}
@@ -658,43 +727,49 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {subAdmins?.map((admin, idx) => (
-                    <tr key={idx} className="hover:bg-blue-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-800">
-                        {admin.name}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {admin.email}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {admin.institute}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {admin.permissions
-                          ? Object.entries(admin.permissions)
-                              .filter(([_, v]) => v)
-                              .map(([k]) => k)
-                              .join(", ")
-                          : "None"}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(idx)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(idx)}
-                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {subAdmins.length === 0
+                    ? Array(5)
+                        .fill(0)
+                        .map((_, idx) => (
+                          <TableRowSkeleton key={idx} columns={5} />
+                        ))
+                    : subAdmins?.map((admin, idx) => (
+                        <tr key={idx} className="hover:bg-blue-50">
+                          <td className="px-6 py-4 text-sm font-medium text-gray-800">
+                            {admin.name}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {admin.email}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {admin.institute}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {admin.permissions
+                              ? Object.entries(admin.permissions)
+                                  .filter(([, v]) => v)
+                                  .map(([k]) => k)
+                                  .join(", ")
+                              : "None"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEdit(idx)}
+                                className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(idx)}
+                                className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                 </tbody>
               </table>
             </div>

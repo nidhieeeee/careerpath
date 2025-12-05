@@ -1,20 +1,21 @@
-import React, { useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  TrendingUp, 
-  Building, 
-  FileCheck,
-  FileText
-} from 'lucide-react';
-import CourseCard from '../components/courses/CourseCard';
-import InstituteCard from '../components/institutes/InstituteCard';
-import ArticleCard from '../components/articles/ArticleCard';
-import MeritListCard from '../components/meritList/MeritListCard';
-import HeroSection from '../components/common/Hero';
-import useDataStore from '../store/useDataStore';
+import React, { useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { TrendingUp, Building, FileCheck, FileText } from "lucide-react";
+import CourseCard from "../components/courses/CourseCard";
+import InstituteCard from "../components/institutes/InstituteCard";
+import ArticleCard from "../components/articles/ArticleCard";
+import MeritListCard from "../components/meritList/MeritListCard";
+import HeroSection from "../components/common/Hero";
+import useDataStore from "../store/useDataStore";
+import {
+  CourseCardSkeleton,
+  InstituteCardSkeleton,
+  ArticleCardSkeleton,
+  MeritListCardSkeleton,
+} from "../components/common/SkeletonLoaders";
 
 // Mock data for fallback or initial render - in a real app, this would be empty
-import { latestMeritLists, latestArticles } from '../data/mockData';
+import { latestMeritLists, latestArticles } from "../data/mockData";
 
 const HomePage = () => {
   const {
@@ -24,7 +25,7 @@ const HomePage = () => {
     meritLists,
     fetchAllData,
     loading,
-    error
+    error,
   } = useDataStore();
 
   useEffect(() => {
@@ -59,11 +60,91 @@ const HomePage = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-blue-600 text-lg font-semibold">Loading, please wait...</p>
-        </div>
+      <div className="min-h-screen">
+        {/* Hero Section Skeleton */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 h-96 animate-pulse" />
+
+        {/* Trending Courses Skeleton */}
+        <section className="py-10 px-4">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="h-8 w-48 bg-gray-300 rounded animate-pulse" />
+              <div className="h-6 w-20 bg-gray-300 rounded animate-pulse" />
+            </div>
+            <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+              <div
+                className="flex space-x-4"
+                style={{ minWidth: "max-content" }}
+              >
+                {Array(6)
+                  .fill(0)
+                  .map((_, idx) => (
+                    <div key={idx} className="w-72 flex-shrink-0">
+                      <CourseCardSkeleton />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Top Institutes Skeleton */}
+        <section className="py-10 px-4 bg-gray-50">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="h-8 w-48 bg-gray-300 rounded animate-pulse" />
+              <div className="h-6 w-20 bg-gray-300 rounded animate-pulse" />
+            </div>
+            <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+              <div
+                className="flex space-x-4"
+                style={{ minWidth: "max-content" }}
+              >
+                {Array(6)
+                  .fill(0)
+                  .map((_, idx) => (
+                    <div key={idx} className="w-72 flex-shrink-0">
+                      <InstituteCardSkeleton />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Recent Merit Lists Skeleton */}
+        <section className="py-10 px-4">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="h-8 w-48 bg-gray-300 rounded animate-pulse" />
+              <div className="h-6 w-20 bg-gray-300 rounded animate-pulse" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array(3)
+                .fill(0)
+                .map((_, idx) => (
+                  <MeritListCardSkeleton key={idx} />
+                ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Latest Articles Skeleton */}
+        <section className="py-10 px-4 bg-gray-50">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="h-8 w-48 bg-gray-300 rounded animate-pulse" />
+              <div className="h-6 w-20 bg-gray-300 rounded animate-pulse" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array(3)
+                .fill(0)
+                .map((_, idx) => (
+                  <ArticleCardSkeleton key={idx} />
+                ))}
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
@@ -100,7 +181,7 @@ const HomePage = () => {
             </Link>
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-            <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
+            <div className="flex space-x-4" style={{ minWidth: "max-content" }}>
               {trendingCourses.length > 0 ? (
                 trendingCourses.map((course) => (
                   <div key={course._id} className="w-72 flex-shrink-0">
@@ -108,7 +189,9 @@ const HomePage = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500">No trending courses available at the moment.</p>
+                <p className="text-gray-500">
+                  No trending courses available at the moment.
+                </p>
               )}
             </div>
           </div>
@@ -131,7 +214,7 @@ const HomePage = () => {
             </Link>
           </div>
           <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-            <div className="flex space-x-4" style={{ minWidth: 'max-content' }}>
+            <div className="flex space-x-4" style={{ minWidth: "max-content" }}>
               {topInstitutes.length > 0 ? (
                 topInstitutes.map((institute) => (
                   <div key={institute._id} className="w-72 flex-shrink-0">
@@ -139,7 +222,9 @@ const HomePage = () => {
                   </div>
                 ))
               ) : (
-                 <p className="text-gray-500">No top institutes available at the moment.</p>
+                <p className="text-gray-500">
+                  No top institutes available at the moment.
+                </p>
               )}
             </div>
           </div>
@@ -195,9 +280,12 @@ const HomePage = () => {
       {/* CTA Section */}
       <section className="bg-blue-800 text-white py-12 px-4">
         <div className="container mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Still have questions about your career?</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            Still have questions about your career?
+          </h2>
           <p className="mb-6 max-w-2xl mx-auto">
-            Our career guidance experts are here to help you make the right choice for your future.
+            Our career guidance experts are here to help you make the right
+            choice for your future.
           </p>
           <Link
             to="/contact"

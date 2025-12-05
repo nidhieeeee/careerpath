@@ -4,6 +4,7 @@ import InstituteCard from "../components/institutes/InstituteCard";
 import { SearchFilter, ActiveFilters } from "../components/common/FilterPanel";
 import { useSearch } from "../hooks/useFilteredData";
 import useDataStore from "../store/useDataStore";
+import { InstituteCardSkeleton } from "../components/common/SkeletonLoaders";
 
 const InstitutesPage = () => {
   const [showFilters, setShowFilters] = useState(false);
@@ -39,62 +40,61 @@ const InstitutesPage = () => {
       ? searchedInstitutesRaw
       : institutes;
 
-    // ---------- OPTIONS FROM DATA (dynamic + alphabetically sorted) ----------
+  // ---------- OPTIONS FROM DATA (dynamic + alphabetically sorted) ----------
 
-    const stateOptions = useMemo(() => {
-      const set = new Set();
-      institutes.forEach((i) => {
-        if (i.location?.state) set.add(i.location.state.trim());
+  const stateOptions = useMemo(() => {
+    const set = new Set();
+    institutes.forEach((i) => {
+      if (i.location?.state) set.add(i.location.state.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [institutes]);
+
+  const cityOptions = useMemo(() => {
+    const set = new Set();
+    institutes.forEach((i) => {
+      if (i.location?.city) set.add(i.location.city.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [institutes]);
+
+  const affiliationOptions = useMemo(() => {
+    const set = new Set();
+    institutes.forEach((i) => {
+      if (i.affilication) set.add(i.affilication.trim());
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [institutes]);
+
+  const naacOptions = useMemo(() => {
+    const set = new Set();
+    institutes.forEach((i) => {
+      i.rankings?.naac?.forEach((r) => {
+        if (r.grade) set.add(r.grade.trim());
       });
-      return Array.from(set).sort((a, b) => a.localeCompare(b));
-    }, [institutes]);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [institutes]);
 
-    const cityOptions = useMemo(() => {
-      const set = new Set();
-      institutes.forEach((i) => {
-        if (i.location?.city) set.add(i.location.city.trim());
+  const courseTypeOptions = useMemo(() => {
+    const set = new Set();
+    institutes.forEach((i) => {
+      i.courses?.forEach((c) => {
+        if (c.name) set.add(c.name.trim());
       });
-      return Array.from(set).sort((a, b) => a.localeCompare(b));
-    }, [institutes]);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [institutes]);
 
-    const affiliationOptions = useMemo(() => {
-      const set = new Set();
-      institutes.forEach((i) => {
-        if (i.affilication) set.add(i.affilication.trim());
+  const financeTypeOptions = useMemo(() => {
+    const set = new Set();
+    institutes.forEach((i) => {
+      i.courses?.forEach((c) => {
+        if (c.finance_type) set.add(c.finance_type.trim());
       });
-      return Array.from(set).sort((a, b) => a.localeCompare(b));
-    }, [institutes]);
-
-    const naacOptions = useMemo(() => {
-      const set = new Set();
-      institutes.forEach((i) => {
-        i.rankings?.naac?.forEach((r) => {
-          if (r.grade) set.add(r.grade.trim());
-        });
-      });
-      return Array.from(set).sort((a, b) => a.localeCompare(b));
-    }, [institutes]);
-
-    const courseTypeOptions = useMemo(() => {
-      const set = new Set();
-      institutes.forEach((i) => {
-        i.courses?.forEach((c) => {
-          if (c.name) set.add(c.name.trim());
-        });
-      });
-      return Array.from(set).sort((a, b) => a.localeCompare(b));
-    }, [institutes]);
-
-    const financeTypeOptions = useMemo(() => {
-      const set = new Set();
-      institutes.forEach((i) => {
-        i.courses?.forEach((c) => {
-          if (c.finance_type) set.add(c.finance_type.trim());
-        });
-      });
-      return Array.from(set).sort((a, b) => a.localeCompare(b));
-    }, [institutes]);
-
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [institutes]);
 
   // ---------- FILTER LOGIC ----------
 
@@ -102,9 +102,8 @@ const InstitutesPage = () => {
     if (!feeRange) return true;
 
     const fees =
-      inst.courses
-        ?.map((c) => c.fees)
-        .filter((f) => typeof f === "number") || [];
+      inst.courses?.map((c) => c.fees).filter((f) => typeof f === "number") ||
+      [];
 
     if (!fees.length) return false;
 
@@ -129,39 +128,29 @@ const InstitutesPage = () => {
       if (!filters.state) return true;
       const instState = inst.location?.state;
       return (
-        instState &&
-        instState.toLowerCase() === filters.state.toLowerCase()
+        instState && instState.toLowerCase() === filters.state.toLowerCase()
       );
     })
     .filter((inst) => {
       if (!filters.city) return true;
       const instCity = inst.location?.city;
-      return (
-        instCity &&
-        instCity.toLowerCase() === filters.city.toLowerCase()
-      );
+      return instCity && instCity.toLowerCase() === filters.city.toLowerCase();
     })
     .filter((inst) => {
       if (!filters.courseType) return true;
-      return inst.courses?.some(
-        (c) => c.name && c.name === filters.courseType
-      );
+      return inst.courses?.some((c) => c.name && c.name === filters.courseType);
     })
     .filter((inst) => {
       if (!filters.affiliation) return true;
       const aff = inst.affilication;
-      return (
-        aff &&
-        aff.toLowerCase() === filters.affiliation.toLowerCase()
-      );
+      return aff && aff.toLowerCase() === filters.affiliation.toLowerCase();
     })
     .filter((inst) => {
       if (!filters.financeType) return true;
       return inst.courses?.some(
         (c) =>
           c.finance_type &&
-          c.finance_type.toLowerCase() ===
-            filters.financeType.toLowerCase()
+          c.finance_type.toLowerCase() === filters.financeType.toLowerCase()
       );
     })
     .filter((inst) => matchesFeeRange(inst, filters.feeRange))
@@ -169,8 +158,7 @@ const InstitutesPage = () => {
       if (!filters.naacGrade) return true;
       return inst.rankings?.naac?.some(
         (r) =>
-          r.grade &&
-          r.grade.toLowerCase() === filters.naacGrade.toLowerCase()
+          r.grade && r.grade.toLowerCase() === filters.naacGrade.toLowerCase()
       );
     })
     .filter((inst) => {
@@ -216,12 +204,24 @@ const InstitutesPage = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-blue-600 text-lg font-semibold">
-            Loading, please wait...
-          </p>
+      <div className="min-h-screen pb-16">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-green-900 to-green-700 text-white py-10 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="h-10 w-64 bg-white/20 rounded animate-pulse mb-4" />
+            <div className="h-6 w-96 bg-white/20 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Loading Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array(12)
+              .fill(0)
+              .map((_, idx) => (
+                <InstituteCardSkeleton key={idx} />
+              ))}
+          </div>
         </div>
       </div>
     );
@@ -284,9 +284,7 @@ const InstitutesPage = () => {
                 </label>
                 <select
                   value={filters.state}
-                  onChange={(e) =>
-                    handleFilterChange("state", e.target.value)
-                  }
+                  onChange={(e) => handleFilterChange("state", e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All States</option>
@@ -305,9 +303,7 @@ const InstitutesPage = () => {
                 </label>
                 <select
                   value={filters.city}
-                  onChange={(e) =>
-                    handleFilterChange("city", e.target.value)
-                  }
+                  onChange={(e) => handleFilterChange("city", e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Cities</option>

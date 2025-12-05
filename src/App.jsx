@@ -4,9 +4,11 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import useDataStore from "./store/useDataStore";
+import { AuthProvider } from "./context/AuthContext";
 
 // Layouts
 import MobileLayout from "./layouts/MobileLayout";
@@ -28,6 +30,7 @@ import SearchResult from "./pages/SearchResult";
 import ExamsPage from "./pages/ExamPage";
 import AdmissionsGuide from "./pages/guidancePage.jsx";
 import HelpDeskPage from "./pages/HelpDeskPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 // Admin Components
 import Adminlogin from "./components/admin/Adminlogin";
@@ -77,160 +80,176 @@ const App = () => {
 
   return (
     <Router>
-      <ScrollToTop />
-      <SearchProvider>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: "#0D47A1",
-              color: "#fff",
-              borderRadius: "8px",
-              fontSize: "14px",
-            },
-          }}
-        />
+      <AuthProvider>
+        <ScrollToTop />
+        <SearchProvider>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: "#0D47A1",
+                color: "#fff",
+                borderRadius: "8px",
+                fontSize: "14px",
+              },
+            }}
+          />
 
-        <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<Adminlogin />} />
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Adminlogin />} />
 
-          {/* Admin Routes (WITHOUT Layout) */}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/account" element={<AdminAccount />} />
-          <Route path="/admin/institutes" element={<AdminInstitute />} />
-          <Route path="/admin/articles" element={<AdminArticles />} />
-          <Route path="/admin/meritlists" element={<MeritListAdmin />} />
-          <Route path="/admin/courses" element={<AdminCourses />} />
+            {/* Admin Routes (WITHOUT Layout) */}
+            <Route
+              path="/admin"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/account" element={<AdminAccount />} />
+            <Route path="/admin/institutes" element={<AdminInstitute />} />
+            <Route path="/admin/articles" element={<AdminArticles />} />
+            <Route path="/admin/meritlists" element={<MeritListAdmin />} />
+            <Route path="/admin/courses" element={<AdminCourses />} />
 
-          {/* SubAdmin Routes (WITHOUT Layout) */}
-          <Route path="/subadmin/dashboard" element={<SubAdminDashboard />} />
-          <Route path="/subadmin/account" element={<SubAdminAccount />} />
-          <Route path="/subadmin/courses" element={<SubAdminCourses />} />
-          <Route path="/subadmin/articles" element={<SubAdminArticles />} />
-          <Route path="/subadmin/meritlists" element={<SubAdminMeritLists />} />
-          <Route
-            path="/subadmin/institute/:id"
-            element={<InstituteDetailsPage />}
-          />
-          <Route path="/guidance" element={<AdmissionsGuide />} />
+            {/* SubAdmin Routes (WITHOUT Layout) */}
+            <Route
+              path="/subadmin"
+              element={<Navigate to="/subadmin/dashboard" replace />}
+            />
+            <Route path="/subadmin/dashboard" element={<SubAdminDashboard />} />
+            <Route path="/subadmin/account" element={<SubAdminAccount />} />
+            <Route path="/subadmin/courses" element={<SubAdminCourses />} />
+            <Route path="/subadmin/articles" element={<SubAdminArticles />} />
+            <Route
+              path="/subadmin/meritlists"
+              element={<SubAdminMeritLists />}
+            />
+            <Route
+              path="/subadmin/institute/:id"
+              element={<InstituteDetailsPage />}
+            />
+            <Route path="/guidance" element={<AdmissionsGuide />} />
 
-          {/* Public Routes (WITH Layout) */}
-          <Route
-            path="/"
-            element={
-              <LayoutWrapper>
-                <HomePage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/after-12th"
-            element={
-              <LayoutWrapper>
-                <After12thPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/after-graduation"
-            element={
-              <LayoutWrapper>
-                <AfterGraduationPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/courses"
-            element={
-              <LayoutWrapper>
-                <CoursesPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/courses/:id"
-            element={
-              <LayoutWrapper>
-                <CourseDetailPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/institutes"
-            element={
-              <LayoutWrapper>
-                <InstitutesPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/institutes/:id"
-            element={
-              <LayoutWrapper>
-                <InstituteDetailPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/merit-list"
-            element={
-              <LayoutWrapper>
-                <MeritListPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/articles"
-            element={
-              <LayoutWrapper>
-                <ArticlesPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/articles/:id"
-            element={
-              <LayoutWrapper>
-                <ArticleDetailPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/contact"
-            element={
-              <LayoutWrapper>
-                <ContactPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/search"
-            element={
-              <LayoutWrapper>
-                <SearchResult />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/exam"
-            element={
-              <LayoutWrapper>
-                <ExamsPage />
-              </LayoutWrapper>
-            }
-          />
-          <Route
-            path="/helpdesk"
-            element={
-              <LayoutWrapper>
-                <HelpDeskPage />
-              </LayoutWrapper>
-            }
-          />
-        </Routes>
-      </SearchProvider>
+            {/* Public Routes (WITH Layout) */}
+            <Route
+              path="/"
+              element={
+                <LayoutWrapper>
+                  <HomePage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/after-12th"
+              element={
+                <LayoutWrapper>
+                  <After12thPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/after-graduation"
+              element={
+                <LayoutWrapper>
+                  <AfterGraduationPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/courses"
+              element={
+                <LayoutWrapper>
+                  <CoursesPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/courses/:id"
+              element={
+                <LayoutWrapper>
+                  <CourseDetailPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/institutes"
+              element={
+                <LayoutWrapper>
+                  <InstitutesPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/institutes/:id"
+              element={
+                <LayoutWrapper>
+                  <InstituteDetailPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/merit-list"
+              element={
+                <LayoutWrapper>
+                  <MeritListPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/articles"
+              element={
+                <LayoutWrapper>
+                  <ArticlesPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/articles/:id"
+              element={
+                <LayoutWrapper>
+                  <ArticleDetailPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/contact"
+              element={
+                <LayoutWrapper>
+                  <ContactPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <LayoutWrapper>
+                  <SearchResult />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/exam"
+              element={
+                <LayoutWrapper>
+                  <ExamsPage />
+                </LayoutWrapper>
+              }
+            />
+            <Route
+              path="/helpdesk"
+              element={
+                <LayoutWrapper>
+                  <HelpDeskPage />
+                </LayoutWrapper>
+              }
+            />
+
+            {/* Catch-all 404 Route (MUST be last) */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </SearchProvider>
+      </AuthProvider>
     </Router>
   );
 };

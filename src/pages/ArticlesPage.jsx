@@ -4,6 +4,7 @@ import ArticleCard from "../components/articles/ArticleCard";
 import { SearchFilter, ActiveFilters } from "../components/common/FilterPanel";
 import { useSearch } from "../hooks/useFilteredData";
 import axios from "axios";
+import { ArticleCardSkeleton } from "../components/common/SkeletonLoaders";
 
 const ArticlesPage = () => {
   const [articles, setArticles] = useState([]);
@@ -61,8 +62,25 @@ const ArticlesPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-lg">
-        Loading articles...
+      <div className="min-h-screen pb-16">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-10 px-4">
+          <div className="container mx-auto">
+            <div className="h-10 w-64 bg-white/20 rounded animate-pulse mb-4" />
+            <div className="h-6 w-96 bg-white/20 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Loading Skeleton */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array(9)
+              .fill(0)
+              .map((_, idx) => (
+                <ArticleCardSkeleton key={idx} />
+              ))}
+          </div>
+        </div>
       </div>
     );
   }
