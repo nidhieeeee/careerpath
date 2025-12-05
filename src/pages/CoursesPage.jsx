@@ -4,6 +4,7 @@ import CourseCard from "../components/courses/CourseCard";
 import { SearchFilter, ActiveFilters } from "../components/common/FilterPanel";
 import { useSearch } from "../hooks/useFilteredData";
 import useDataStore from "../store/useDataStore";
+import { CourseCardSkeleton } from "../components/common/SkeletonLoaders";
 
 const CoursesPage = () => {
   const { courses, fetchCourses, loading } = useDataStore();
@@ -33,7 +34,9 @@ const CoursesPage = () => {
 
   // If search has no results (initial / empty term), show all courses
   const searchResults =
-    searchResultsRaw && searchResultsRaw.length ? searchResultsRaw : courses || [];
+    searchResultsRaw && searchResultsRaw.length
+      ? searchResultsRaw
+      : courses || [];
 
   // ---- Dynamic, alphabetically sorted filter options from data ----
 
@@ -43,9 +46,7 @@ const CoursesPage = () => {
     (courses || []).forEach((c) => {
       if (c.type) set.add(c.type.toString());
     });
-    const sortedTypes = Array.from(set).sort((a, b) =>
-      a.localeCompare(b)
-    );
+    const sortedTypes = Array.from(set).sort((a, b) => a.localeCompare(b));
     return ["all", ...sortedTypes]; // keep "all" at start
   }, [courses]);
 
@@ -128,12 +129,24 @@ const CoursesPage = () => {
   // ---- LOADING STATE ----
   if (loading && (!courses || courses.length === 0)) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-blue-600 text-lg font-semibold">
-            Loading courses, please wait...
-          </p>
+      <div className="min-h-screen pb-16">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-10 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="h-10 w-64 bg-white/20 rounded animate-pulse mb-4" />
+            <div className="h-6 w-96 bg-white/20 rounded animate-pulse" />
+          </div>
+        </div>
+
+        {/* Loading Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array(12)
+              .fill(0)
+              .map((_, idx) => (
+                <CourseCardSkeleton key={idx} />
+              ))}
+          </div>
         </div>
       </div>
     );
@@ -209,9 +222,7 @@ const CoursesPage = () => {
                 </label>
                 <select
                   value={filters.stream}
-                  onChange={(e) =>
-                    handleFilterChange("stream", e.target.value)
-                  }
+                  onChange={(e) => handleFilterChange("stream", e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Streams</option>

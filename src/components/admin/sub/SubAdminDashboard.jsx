@@ -1,27 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useDataStore from "../../../store/useDataStore";
+import { useAuth } from "../../../context/AuthContext";
 import SubAdminNavbar from "./SubAdminNavbar";
-import axios from "../../../components/api/axios";
-import { useInstitutes } from "../../../hooks/useInstitutes"; // 🔹 adjust path if needed
-import { toast } from "react-toastify";
-
+import * as subAdminService from "../../../services/subAdminService";
+import * as instituteService from "../../../services/instituteService";
+import {
+  Skeleton,
+  StatsCardSkeleton,
+} from "../../../components/common/SkeletonLoaders";
 import {
   BookOpenIcon,
   DocumentTextIcon,
   AcademicCapIcon,
   BuildingOfficeIcon,
   UserIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  MapPinIcon,
-  GlobeAltIcon,
-  CalendarIcon,
-  TrophyIcon,
-  StarIcon,
-  ClockIcon,
   Cog6ToothIcon,
+  InformationCircleIcon,
+  XCircleIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/outline";
+
+// Skeleton Loader Component
+const SkeletonLoader = ({ count = 1 }) => (
+  <div className="space-y-3">
+    {Array(count)
+      .fill(0)
+      .map((_, i) => (
+        <div
+          key={i}
+          className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded animate-pulse"
+        ></div>
+      ))}
+  </div>
+);
 
 const skeletonStats = [
   {
@@ -29,318 +41,184 @@ const skeletonStats = [
     label: "Total Courses Managed",
     value: null,
     icon: BookOpenIcon,
-    desc: "Courses managed by the sub-admin",
-    color: "bg-green-100 text-green-700",
+    desc: "Courses managed",
+    color: "bg-blue-100 text-blue-700",
   },
   {
     key: "articles",
     label: "Total Articles Added",
     value: null,
     icon: DocumentTextIcon,
-    desc: "Articles added by the sub-admin",
-    color: "bg-pink-100 text-pink-700",
+    desc: "Articles published",
+    color: "bg-green-100 text-green-700",
   },
   {
     key: "merits",
     label: "Total Merit Lists Published",
     value: null,
     icon: AcademicCapIcon,
-    desc: "Merit lists published by the sub-admin",
-    color: "bg-blue-100 text-blue-700",
+    desc: "Merit lists created",
+    color: "bg-yellow-100 text-yellow-700",
   },
 ];
 
 export default function SubAdminDashboard() {
   const { isLoggedIn } = useDataStore();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const { editInstitute } = useInstitutes();
 
   const [stats, setStats] = useState(skeletonStats);
   const [subAdminInfo, setSubAdminInfo] = useState(null);
   const [instituteInfo, setInstituteInfo] = useState(null);
-  const [instituteRaw, setInstituteRaw] = useState(null); // full institute doc from API
-  const [superAdminInfo, setSuperAdminInfo] = useState(null);
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [loadingPage, setLoadingPage] = useState(true);
+  const [instituteCourses, setInstituteCourses] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Edit mode for institute
-  const [editInstituteMode, setEditInstituteMode] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
-  const [instituteForm, setInstituteForm] = useState({
-    city: "",
-    state: "",
-    address: "",
-    website: "",
-    affiliation: "",
-    email: "",
-    phone: "",
-  });
-
-  // Redirect if not logged in
+  // Check authentication
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn && !isAuthenticated) {
       navigate("/login");
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, isAuthenticated, navigate]);
 
-  // Fetch data from backend
+  // Fetch dashboard data from API
   useEffect(() => {
-    if (!isLoggedIn) return;
-
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    const authHeaders = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    const fetchAll = async () => {
+    const fetchDashboardData = async () => {
       try {
-        // stats, subadmin info, superadmin info
-        const statsPromise = axios.get(
-          `${import.meta.env.VITE_BASE_URL}/auth/subadmin/stats`,
-          authHeaders
+        setError(null);
+
+        // Check if token exists
+        const token =
+          localStorage.getItem("authToken") ||
+          localStorage.getItem("token") ||
+          sessionStorage.getItem("authToken") ||
+          sessionStorage.getItem("token");
+
+        if (!token) {
+          console.warn(
+            "⚠️ No authentication token found. Please log in first."
+          );
+          setError("Authentication token not found. Please log in again.");
+          navigate("/login");
+          return;
+        }
+
+        const subAdminId =
+          localStorage.getItem("subadminId") || "6930a8479db1fa3b3ba61753";
+
+        // Fetch dashboard data
+        const dashboardData = await subAdminService.fetchSubAdminDashboard(
+          subAdminId
         );
-        const infoPromise = axios.get(
-          `${import.meta.env.VITE_BASE_URL}/auth/subadmin/info`,
-          authHeaders
-        );
-        const adminsPromise = axios.get(
-          `${import.meta.env.VITE_BASE_URL}/auth/admins`
-        );
 
-        const [statsRes, infoRes, adminsRes] = await Promise.all([
-          statsPromise,
-          infoPromise,
-          adminsPromise,
-        ]);
+        if (dashboardData) {
+          // Update stats
+          if (dashboardData.stats) {
+            setStats([
+              {
+                label: "Total Courses Managed",
+                value: dashboardData.stats.totalCourses || 0,
+                icon: BookOpenIcon,
+                desc: "Courses managed",
+                color: "bg-blue-100 text-blue-700",
+              },
+              {
+                label: "Total Articles Added",
+                value: dashboardData.stats.totalArticles || 0,
+                icon: DocumentTextIcon,
+                desc: "Articles published",
+                color: "bg-green-100 text-green-700",
+              },
+              {
+                label: "Total Merit Lists Published",
+                value: dashboardData.stats.totalMeritLists || 0,
+                icon: AcademicCapIcon,
+                desc: "Merit lists created",
+                color: "bg-yellow-100 text-yellow-700",
+              },
+            ]);
+          }
 
-        // ----- Stats (global counts) -----
-        const counts = statsRes.data || {};
-        setStats([
-          {
-            key: "courses",
-            label: "Total Courses Managed",
-            value: counts.manageCourses ?? counts.managecourses ?? 0,
-            icon: BookOpenIcon,
-            desc: "Courses managed under your institute",
-            color: "bg-green-100 text-green-700",
-          },
-          {
-            key: "articles",
-            label: "Total Articles Added",
-            value: counts.articles ?? 0,
-            icon: DocumentTextIcon,
-            desc: "Articles added in the system",
-            color: "bg-pink-100 text-pink-700",
-          },
-          {
-            key: "merits",
-            label: "Total Merit Lists Published",
-            value: counts.merits ?? 0,
-            icon: AcademicCapIcon,
-            desc: "Merit lists published so far",
-            color: "bg-blue-100 text-blue-700",
-          },
-        ]);
+          // Update subadmin info
+          if (dashboardData.subAdmin) {
+            setSubAdminInfo(dashboardData.subAdmin);
+          }
 
-        // ----- SubAdmin Info -----
-        const subRes = infoRes.data;
-        setSubAdminInfo({
-          name: subRes.name || "SubAdmin",
-          email: subRes.email,
-          phone: "", // no phone field in model yet
-          designation: "Institute SubAdmin",
-          department: "Academic Administration",
-          joinDate: "N/A",
-          status: "Active",
-          id: subRes.id,
-          instituteName: subRes.institute || "Your Institute",
-        });
-
-        // ----- Institute Info -----
-        if (subRes.id) {
-          try {
-            const instRes = await axios.get(
-              `${import.meta.env.VITE_BASE_URL}/auth/subadmin/institute/${subRes.id}`,
-              authHeaders
-            );
-            const inst = instRes.data || {};
-            setInstituteRaw(inst);
-
-            const loc = inst.location || {};
-            const contact = inst.contact || {};
-            const rankings = inst.rankings || {};
-
-            const nirf = Array.isArray(rankings.nirf) ? rankings.nirf[0] : null;
-            const naac = Array.isArray(rankings.naac) ? rankings.naac[0] : null;
-
-            setInstituteInfo({
-              name: inst.name || subRes.institute || "Institute",
-              type: "Institute",
-              establishedYear: "N/A",
-              location: loc.city
-                ? `${loc.city}${loc.state ? ", " + loc.state : ""}`
-                : "N/A",
-              address: loc.address || "N/A",
-              affiliation: inst.affilication || "N/A",
-              accreditation: naac?.grade || "Not specified",
-              website: inst.website || "N/A",
-              email: contact.instituteEmail || "N/A",
-              phone: contact.instituteMobile || "N/A",
-              totalStudents: inst.totalStudents || "—",
-              totalFaculty: inst.totalFaculty || "—",
-              departments: inst.departments || "—",
-              ranking: nirf
-                ? `NIRF Rank ${nirf.rank} (${nirf.year})`
-                : "Not specified",
-            });
-
-            // Pre-fill edit form with editable fields
-            setInstituteForm({
-              city: loc.city || "",
-              state: loc.state || "",
-              address: loc.address || "",
-              website: inst.website || "",
-              affiliation: inst.affilication || "",
-              email: contact.instituteEmail || "",
-              phone: contact.instituteMobile || "",
-            });
-          } catch (e) {
-            console.error("Error fetching institute details:", e);
-            setInstituteInfo({
-              name: subRes.institute || "Institute",
-            });
+          // Update institute info from dashboard data (fallback)
+          if (dashboardData.institute) {
+            setInstituteInfo(dashboardData.institute);
           }
         }
 
-        // ----- Super Admin Info -----
-        const admins = Array.isArray(adminsRes.data) ? adminsRes.data : [];
-        const superAdmin = admins[0] || null;
-        if (superAdmin) {
-          setSuperAdminInfo({
-            name: superAdmin.name || "Super Admin",
-            designation: "System Administrator",
-            email: superAdmin.email,
-            phone: "",
-            department: "IT Administration",
-            status: "Active",
-          });
-        }
+        // Fetch institute information using the new service
+        try {
+          const instituteData = await instituteService.fetchMyInstitute();
+          if (instituteData && instituteData.institute) {
+            setInstituteInfo(instituteData.institute);
+            console.log("✅ Institute data fetched:", instituteData.institute);
 
-        // ----- Recent Activities (still simple for now) -----
-        setRecentActivities([
-          {
-            id: 1,
-            action: "Logged in to dashboard",
-            title: "SubAdmin session started",
-            time: "Just now",
-            type: "course",
-          },
-        ]);
+            // Fetch courses for this institute
+            if (instituteData.institute._id) {
+              try {
+                const coursesData =
+                  await instituteService.fetchInstituteCourses(
+                    instituteData.institute._id
+                  );
+                setInstituteCourses(coursesData);
+                console.log(
+                  `✅ Found ${coursesData.length} courses for institute`
+                );
+              } catch (coursesErr) {
+                console.warn(
+                  "Failed to fetch institute courses:",
+                  coursesErr.message
+                );
+              }
+            }
+          }
+        } catch (instituteErr) {
+          console.warn(
+            "Failed to fetch institute from new endpoint:",
+            instituteErr.message
+          );
+          // If this fails, we'll use the institute data from dashboard (if available)
+        }
       } catch (err) {
-        console.error("Error loading subadmin dashboard data:", err);
-      } finally {
-        setLoadingPage(false);
+        console.error("Failed to fetch dashboard data:", err);
+        setError("Failed to load dashboard data.");
       }
     };
 
-    fetchAll();
-  }, [isLoggedIn, editInstitute]);
-
-  // ---- Handlers for institute edit form ----
-  const handleInstituteFieldChange = (e) => {
-    const { name, value } = e.target;
-    setInstituteForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleInstituteUpdate = async (e) => {
-    e.preventDefault();
-    if (!instituteRaw?._id) {
-      toast.error("Institute not found for update.");
-      return;
+    if (isLoggedIn) {
+      fetchDashboardData();
     }
-
-    setEditLoading(true);
-    try {
-      // Only allow updating these specific fields
-      const payload = {
-        location: {
-          city: instituteForm.city,
-          state: instituteForm.state,
-          address: instituteForm.address,
-        },
-        website: instituteForm.website,
-        affilication: instituteForm.affiliation,
-        contact: {
-          instituteEmail: instituteForm.email,
-          instituteMobile: instituteForm.phone,
-        },
-      };
-
-      const success = await editInstitute(instituteRaw._id, payload);
-      if (success) {
-        toast.success("Institute details updated.");
-
-        // Update local display state too
-        setInstituteInfo((prev) => {
-          const locStr = instituteForm.city
-            ? `${instituteForm.city}${
-                instituteForm.state ? ", " + instituteForm.state : ""
-              }`
-            : "N/A";
-
-          return {
-            ...(prev || {}),
-            location: locStr,
-            address: instituteForm.address || "N/A",
-            website: instituteForm.website || "N/A",
-            affiliation: instituteForm.affiliation || "N/A",
-            email: instituteForm.email || "N/A",
-            phone: instituteForm.phone || "N/A",
-          };
-        });
-
-        setEditInstituteMode(false);
-      }
-    } catch (err) {
-      console.error("Error updating institute:", err);
-    } finally {
-      setEditLoading(false);
-    }
-  };
-
-  const cancelInstituteEdit = () => {
-    // reset form back to current instituteInfo/instituteRaw
-    if (instituteRaw) {
-      const loc = instituteRaw.location || {};
-      const contact = instituteRaw.contact || {};
-      setInstituteForm({
-        city: loc.city || "",
-        state: loc.state || "",
-        address: loc.address || "",
-        website: instituteRaw.website || "",
-        affiliation: instituteRaw.affilication || "",
-        email: contact.instituteEmail || "",
-        phone: contact.instituteMobile || "",
-      });
-    }
-    setEditInstituteMode(false);
-  };
+  }, [isLoggedIn, navigate]);
 
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
         <div className="bg-white rounded-2xl shadow-lg border border-blue-200 p-8 max-w-md w-full text-center">
+          <div className="flex justify-center mb-4">
+            <svg
+              className="w-12 h-12 text-red-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 2l7 6v6c0 5-3.5 9-7 9s-7-4-7-9V8l7-6z"
+              />
+            </svg>
+          </div>
           <h2 className="text-2xl font-bold text-blue-900 mb-2">
             Unauthorized Access
           </h2>
-          <p className="text-gray-600 mb-6">Redirecting to login page...</p>
+          <p className="text-gray-600 mb-6">
+            You are not authorized to view this page. If you have subadmin
+            credentials, please log in by clicking the button below.
+          </p>
           <button
             onClick={() => navigate("/login")}
             className="bg-blue-800 hover:bg-blue-900 text-white font-medium px-6 py-2 rounded-lg transition"
@@ -355,602 +233,220 @@ export default function SubAdminDashboard() {
   return (
     <>
       <SubAdminNavbar />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6 lg:p-8 mt-32">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 pt-32 py-10 px-2 md:px-8">
         <div className="max-w-7xl mx-auto">
+          {/* Page Title */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">
-              Sub-Admin Dashboard
-            </h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Dashboard</h1>
             <p className="text-gray-600">
-              {loadingPage
-                ? "Loading your institute details..."
-                : `Welcome to your administrative panel - ${
-                    instituteInfo?.name || "Institute"
-                  }`}
+              Welcome back,{" "}
+              <span className="font-bold">
+                {subAdminInfo?.name || "SubAdmin"}
+              </span>
             </p>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <div className="max-w-7xl mx-auto mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <XCircleIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-900 font-medium">Error</p>
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            </div>
+          )}
+
           {/* Stats Section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className={`rounded-2xl shadow-lg p-6 flex flex-col items-center ${stat.color} transform transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer`}
-                onClick={() => {
-                  if (stat.label.includes("Courses"))
-                    navigate("/subadmin/courses");
-                  else if (stat.label.includes("Articles"))
-                    navigate("/subadmin/articles");
-                  else if (stat.label.includes("Merit"))
-                    navigate("/subadmin/meritlists");
-                }}
-              >
-                <stat.icon className="w-10 h-10 mb-2" />
-                <div className="text-3xl font-extrabold mb-1">
-                  {stat.value !== null ? (
-                    stat.value
-                  ) : (
-                    <div className="animate-pulse bg-gray-300 h-8 w-12 rounded"></div>
-                  )}
+            {stats.map((stat) => {
+              const Icon = stat.icon;
+
+              if (stat.value === null) {
+                return <StatsCardSkeleton key={stat.label} />;
+              }
+
+              return (
+                <div
+                  key={stat.label}
+                  onClick={() => {
+                    if (stat.label.includes("Courses"))
+                      navigate("/subadmin/courses");
+                    else if (stat.label.includes("Articles"))
+                      navigate("/subadmin/articles");
+                    else if (stat.label.includes("Merit"))
+                      navigate("/subadmin/meritlists");
+                  }}
+                  className={`rounded-2xl shadow-lg p-6 flex flex-col items-center cursor-pointer transition-all duration-300 hover:shadow-xl ${stat.color}`}
+                >
+                  <Icon className="w-10 h-10 mb-2" />
+                  <div className="text-3xl font-extrabold mb-1">
+                    {stat.value}
+                  </div>
+                  <div className="font-semibold text-lg mb-1">{stat.label}</div>
+                  <div className="text-sm text-gray-600">{stat.desc}</div>
                 </div>
-                <div className="font-semibold text-lg mb-1 text-center">
-                  {stat.label}
-                </div>
-                <div className="text-sm text-gray-600 text-center">
-                  {stat.desc}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
-            {/* Sub-Admin Information */}
-            <div className="xl:col-span-1">
-              <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-100 h-full">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <UserIcon className="w-6 h-6 text-blue-600" />
-                    Your Profile
-                  </h2>
-                  <button
-                    onClick={() => navigate("/subadmin/account")}
-                    className="py-2 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 hover:scale-105 transition-all duration-300 shadow-lg"
-                  >
-                    <Cog6ToothIcon className="w-4 h-4 inline mr-1" />
-                    Edit
-                  </button>
-                </div>
-
-                {subAdminInfo && (
-                  <div className="space-y-4">
-                    <div className="text-center pb-6 border-b border-gray-200">
-                      <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <UserIcon className="w-10 h-10 text-white" />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-800">
-                        {subAdminInfo.name}
-                      </h3>
-                      <p className="text-gray-600">
-                        {subAdminInfo.designation}
-                      </p>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 mt-2">
-                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                        {subAdminInfo.status}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2 mb-1">
-                          <EnvelopeIcon className="w-4 h-4 text-gray-500" />
-                          <p className="text-sm text-gray-500">Email</p>
-                        </div>
-                        <p className="text-gray-800 font-medium">
-                          {subAdminInfo.email}
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2 mb-1">
-                          <PhoneIcon className="w-4 h-4 text-gray-500" />
-                          <p className="text-sm text-gray-500">Phone</p>
-                        </div>
-                        <p className="text-gray-800 font-medium">
-                          {subAdminInfo.phone || "Not provided"}
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2 mb-1">
-                          <CalendarIcon className="w-4 h-4 text-gray-500" />
-                          <p className="text-sm text-gray-500">Joined</p>
-                        </div>
-                        <p className="text-gray-800 font-medium">
-                          {subAdminInfo.joinDate}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+          {/* Main Information Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-12">
+            {/* Sub-Admin Profile */}
+            <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-blue-800 flex items-center gap-2">
+                  <UserIcon className="w-6 h-6 text-blue-700" />
+                  Profile
+                </h2>
+                <button
+                  onClick={() => navigate("/subadmin/account")}
+                  className="py-2 px-4 bg-blue-700 hover:bg-blue-900 text-white font-semibold rounded-xl shadow transition duration-200 text-sm flex items-center gap-2"
+                >
+                  <Cog6ToothIcon className="w-4 h-4" />
+                  Edit
+                </button>
               </div>
-            </div>
 
-            {/* Institute Information + Edit */}
-            <div className="xl:col-span-2">
-              <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-100 h-full">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <BuildingOfficeIcon className="w-6 h-6 text-blue-600" />
-                    Institute Information
-                  </h2>
-                  <button
-                    type="button"
-                    onClick={() => setEditInstituteMode((prev) => !prev)}
-                    className="py-2 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 hover:scale-105 transition-all duration-300 shadow-lg"
-                  >
-                    {editInstituteMode ? "Close Edit" : "Edit Institute"}
-                  </button>
-                </div>
-
-                {/* View Mode */}
-                {!editInstituteMode && instituteInfo && (
-                  <div className="space-y-6">
-                    {/* Basic Institute Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <BuildingOfficeIcon className="w-4 h-4 text-gray-500" />
-                            <p className="text-sm text-gray-500">
-                              Institute Name
-                            </p>
-                          </div>
-                          <p className="text-gray-800 font-semibold">
-                            {instituteInfo.name}
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <AcademicCapIcon className="w-4 h-4 text-gray-500" />
-                            <p className="text-sm text-gray-500">Type</p>
-                          </div>
-                          <p className="text-gray-800 font-semibold">
-                            {instituteInfo.type}
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <CalendarIcon className="w-4 h-4 text-gray-500" />
-                            <p className="text-sm text-gray-500">
-                              Established
-                            </p>
-                          </div>
-                          <p className="text-gray-800 font-semibold">
-                            {instituteInfo.establishedYear}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <MapPinIcon className="w-4 h-4 text-gray-500" />
-                            <p className="text-sm text-gray-500">Location</p>
-                          </div>
-                          <p className="text-gray-800 font-semibold">
-                            {instituteInfo.location}
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <StarIcon className="w-4 h-4 text-gray-500" />
-                            <p className="text-sm text-gray-500">
-                              Accreditation
-                            </p>
-                          </div>
-                          <p className="text-gray-800 font-semibold">
-                            {instituteInfo.accreditation}
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <TrophyIcon className="w-4 h-4 text-gray-500" />
-                            <p className="text-sm text-gray-500">Ranking</p>
-                          </div>
-                          <p className="text-gray-800 font-semibold">
-                            {instituteInfo.ranking}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                        Contact Information
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="p-4 bg-blue-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <EnvelopeIcon className="w-4 h-4 text-blue-600" />
-                            <p className="text-sm text-blue-600">Email</p>
-                          </div>
-                          <p className="text-gray-800 font-medium">
-                            {instituteInfo.email}
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-blue-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-1">
-                            <PhoneIcon className="w-4 h-4 text-blue-600" />
-                            <p className="text-sm text-blue-600">Phone</p>
-                          </div>
-                          <p className="text-gray-800 font-medium">
-                            {instituteInfo.phone}
-                          </p>
-                        </div>
-
-                        <div className="p-4 bg-blue-50 rounded-lg md:col-span-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <GlobeAltIcon className="w-4 h-4 text-blue-600" />
-                            <p className="text-sm text-blue-600">Website</p>
-                          </div>
-                          <p className="text-gray-800 font-medium">
-                            {instituteInfo.website}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Statistics */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                        Institute Statistics
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-                          <p className="text-2xl font-bold text-blue-600">
-                            {instituteInfo.totalStudents}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Total Students
-                          </p>
-                        </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-                          <p className="text-2xl font-bold text-green-600">
-                            {instituteInfo.totalFaculty}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Faculty Members
-                          </p>
-                        </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
-                          <p className="text-2xl font-bold text-purple-600">
-                            {instituteInfo.departments}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Departments
-                          </p>
-                        </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
-                          <p className="text-2xl font-bold text-orange-600">
-                            {instituteInfo.accreditation || "—"}
-                          </p>
-                          <p className="text-sm text-gray-600">NAAC Grade</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Edit Mode */}
-                {editInstituteMode && (
-                  <form
-                    className="space-y-6"
-                    onSubmit={handleInstituteUpdate}
-                  >
-                    <p className="text-sm text-gray-500 mb-2">
-                      You can update contact and location details. Institute
-                      name is locked and cannot be changed.
-                    </p>
-
-                    {/* Locked Name */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Institute Name (locked)
-                        </label>
-                        <input
-                          type="text"
-                          value={instituteInfo?.name || ""}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Location / Address */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          City
-                        </label>
-                        <input
-                          type="text"
-                          name="city"
-                          value={instituteForm.city}
-                          onChange={handleInstituteFieldChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          placeholder="City"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          State
-                        </label>
-                        <input
-                          type="text"
-                          name="state"
-                          value={instituteForm.state}
-                          onChange={handleInstituteFieldChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          placeholder="State"
-                        />
-                      </div>
-                      <div className="md:col-span-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Address
-                        </label>
-                        <input
-                          type="text"
-                          name="address"
-                          value={instituteForm.address}
-                          onChange={handleInstituteFieldChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          placeholder="Full address"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Website & Affiliation */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Website
-                        </label>
-                        <input
-                          type="text"
-                          name="website"
-                          value={instituteForm.website}
-                          onChange={handleInstituteFieldChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          placeholder="https://..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Affiliation
-                        </label>
-                        <input
-                          type="text"
-                          name="affiliation"
-                          value={instituteForm.affiliation}
-                          onChange={handleInstituteFieldChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          placeholder="University / Board"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Contact */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Institute Email
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={instituteForm.email}
-                          onChange={handleInstituteFieldChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          placeholder="contact@example.com"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Institute Phone
-                        </label>
-                        <input
-                          type="text"
-                          name="phone"
-                          value={instituteForm.phone}
-                          onChange={handleInstituteFieldChange}
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                          placeholder="+91 ..."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                      <button
-                        type="button"
-                        onClick={cancelInstituteEdit}
-                        disabled={editLoading}
-                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={editLoading}
-                        className="px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:bg-blue-400"
-                      >
-                        {editLoading ? "Saving..." : "Save Changes"}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Section - Super admin + Activities (unchanged) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Super-Admin Information */}
-            <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <UserIcon className="w-6 h-6 text-purple-600" />
-                Super-Admin Contact
-              </h2>
-
-              {superAdminInfo && (
+              {subAdminInfo ? (
                 <div className="space-y-6">
-                  <div className="text-center pb-6 border-b border-gray-200">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                       <UserIcon className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800">
-                      {superAdminInfo.name}
-                    </h3>
-                    <p className="text-gray-600">
-                      {superAdminInfo.designation}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {subAdminInfo.name}
+                      </h3>
+                      <p className="text-gray-700 text-sm font-medium">
+                        {subAdminInfo.designation || "SubAdmin"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <SkeletonLoader count={3} />
+              )}
+            </div>
+
+            {/* Institute Information */}
+            <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-blue-300">
+              <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center gap-2">
+                <BuildingOfficeIcon className="w-6 h-6 text-blue-700" />
+                Institute
+              </h2>
+
+              {instituteInfo ? (
+                <div className="space-y-4">
+                  <div className="pb-4 border-b border-gray-200">
+                    <p className="text-xs font-bold text-blue-600 uppercase mb-2">
+                      Name
                     </p>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 mt-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                      {superAdminInfo.status}
-                    </span>
+                    <p className="text-gray-900 font-semibold text-lg">
+                      {instituteInfo.name}
+                    </p>
                   </div>
 
+                  {instituteInfo.code && (
+                    <div className="pb-4 border-b border-gray-200">
+                      <p className="text-xs font-bold text-blue-600 uppercase mb-2">
+                        Institute Code
+                      </p>
+                      <p className="text-gray-700 font-mono font-semibold text-base">
+                        {instituteInfo.code}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="pb-4 border-b border-gray-200">
+                    <p className="text-xs font-bold text-blue-600 uppercase mb-2">
+                      Location
+                    </p>
+                    <p className="text-gray-700 font-medium text-base">
+                      {typeof instituteInfo.location === "object"
+                        ? `${instituteInfo.location?.city || ""}, ${
+                            instituteInfo.location?.state || ""
+                          }`
+                        : instituteInfo.location}
+                    </p>
+                  </div>
+                  
                   <div className="space-y-4">
                     <div className="p-4 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-2 mb-1">
                         <EnvelopeIcon className="w-4 h-4 text-gray-500" />
                         <p className="text-sm text-gray-500">Email</p>
                       </div>
-                      <p className="text-gray-800 font-medium">
-                        {superAdminInfo.email}
-                      </p>
+                      <p className="text-gray-800 font-medium">{superAdminInfo.email}</p>
                     </div>
+                  )}
 
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <PhoneIcon className="w-4 h-4 text-gray-500" />
-                        <p className="text-sm text-gray-500">Phone</p>
+                  {instituteInfo.isTop && (
+                    <div className="pb-4 border-b border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full">
+                          ⭐ TOP INSTITUTE
+                        </span>
                       </div>
-                      <p className="text-gray-800 font-medium">
-                        {superAdminInfo.phone || "Not provided"}
-                      </p>
                     </div>
+                  )}
+
+                  <div>
+                    <button
+                      onClick={() =>
+                        navigate(`/subadmin/institute/${instituteInfo._id}`)
+                      }
+                      className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm mt-2 transition-colors"
+                    >
+                      View Full Details
+                      <ArrowRightIcon className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
+              ) : (
+                <SkeletonLoader count={3} />
               )}
-            </div>
-
-            {/* Recent Activities */}
-            <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <ClockIcon className="w-6 h-6 text-green-600" />
-                Recent Activities
-              </h2>
-
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div
-                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        activity.type === "course"
-                          ? "bg-blue-100"
-                          : activity.type === "article"
-                          ? "bg-green-100"
-                          : "bg-purple-100"
-                      }`}
-                    >
-                      {activity.type === "course" ? (
-                        <BookOpenIcon className="w-5 h-5 text-blue-600" />
-                      ) : activity.type === "article" ? (
-                        <DocumentTextIcon className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <TrophyIcon className="w-5 h-5 text-purple-600" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-800">
-                        {activity.action}
-                      </p>
-                      <p className="text-sm text-gray-600 truncate">
-                        {activity.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 text-center">
-                <button className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors">
-                  View All Activities
-                </button>
-              </div>
             </div>
           </div>
 
           {/* Quick Actions Footer */}
           <div className="mt-8 bg-white shadow-xl rounded-xl p-6 border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">
-              Quick Actions
-            </h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <button
                 onClick={() => navigate("/subadmin/courses")}
-                className="flex items-center gap-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left"
+                className="flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl transition-all duration-200 border border-blue-200 hover:border-blue-300 group"
               >
                 <BookOpenIcon className="w-6 h-6 text-blue-600" />
                 <div>
-                  <h4 className="font-semibold text-gray-800">
-                    Manage Courses
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Add, edit, or remove courses
-                  </p>
+                  <h4 className="font-semibold text-gray-800">Manage Courses</h4>
+                  <p className="text-sm text-gray-600">Add, edit, or remove courses</p>
                 </div>
               </button>
 
               <button
                 onClick={() => navigate("/subadmin/articles")}
-                className="flex items-center gap-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left"
+                className="flex items-center gap-3 p-4 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl transition-all duration-200 border border-green-200 hover:border-green-300 group"
               >
                 <DocumentTextIcon className="w-6 h-6 text-green-600" />
                 <div>
-                  <h4 className="font-semibold text-gray-800">
-                    Manage Articles
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Create and publish articles
-                  </p>
+                  <h4 className="font-semibold text-gray-800">Manage Articles</h4>
+                  <p className="text-sm text-gray-600">Create and publish articles</p>
                 </div>
               </button>
 
               <button
                 onClick={() => navigate("/subadmin/meritlists")}
-                className="flex items-center gap-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-left"
+                className="flex items-center gap-3 p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-xl transition-all duration-200 border border-yellow-200 hover:border-yellow-300 group"
               >
-                <TrophyIcon className="w-6 h-6 text-purple-600" />
-                <div>
-                  <h4 className="font-semibold text-gray-800">Merit Lists</h4>
-                  <p className="text-sm text-gray-600">
-                    Create and manage merit lists
-                  </p>
+                <div className="p-2 bg-yellow-200 group-hover:bg-yellow-300 rounded-lg transition-colors">
+                  <AcademicCapIcon className="w-5 h-5 text-yellow-700" />
+                </div>
+                <div className="text-left">
+                  <h4 className="font-semibold text-gray-900 text-sm">
+                    Merit Lists
+                  </h4>
+                  <p className="text-xs text-gray-600">Create</p>
                 </div>
               </button>
             </div>
