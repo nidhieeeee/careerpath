@@ -61,114 +61,151 @@ export default function Adminlogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg border border-gray-200">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          {role === "super" ? "Super Admin Login" : "Sub-Admin Login"}
-        </h2>
-
-        {error && (
-          <div className="text-red-600 bg-red-50 p-3 rounded-lg text-center mb-4 font-medium border border-red-200">
-            {error}
-          </div>
-        )}
-
-        {/* Role Toggle */}
-        <div className="flex justify-center mb-6">
-          <div className="flex rounded-lg border border-gray-300 p-1 bg-gray-100">
-            <button
-              type="button"
-              onClick={() => setRole("super")}
-              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
-                role === "super"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-gray-600"
-              }`}
-            >
-              Super Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("sub")}
-              className={`px-6 py-2 text-sm font-semibold rounded-md transition-colors ${
-                role === "sub"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-gray-600"
-              }`}
-            >
-              Sub-Admin
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block font-medium text-gray-700">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={credentials.email}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-              placeholder="you@example.com"
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
+      <div className="w-full max-w-md">
+        {/* Logo Section */}
+        <div className="text-center mb-8">
+          <div className="inline-block bg-white p-4 rounded-full shadow-lg mb-4">
+            <img
+              src="/logoCP.png"
+              alt="CareerPath Logo"
+              className="w-20 h-20 object-contain"
             />
           </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            {role === "super" ? "Super Admin Login" : "Sub-Admin Login"}
+          </h2>
+          <p className="text-gray-600">
+            Welcome back! Please login to continue
+          </p>
+        </div>
 
-          <div>
-            <label className="block font-medium text-gray-700">Password</label>
-            <div className="relative mt-1">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={credentials.password}
-                onChange={handleChange}
-                required
-                className="w-full p-3 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                placeholder="••••••••"
-              />
+        <div className="p-8 bg-white rounded-2xl shadow-xl border border-blue-100">
+          {error && (
+            <div className="text-red-600 bg-red-50 p-4 rounded-xl text-center mb-6 font-medium border border-red-200 shadow-sm">
+              <div className="flex items-center justify-center gap-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Role Toggle */}
+          <div className="flex justify-center mb-8">
+            <div className="flex rounded-xl border-2 border-blue-200 p-1.5 bg-blue-50">
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                onClick={() => setRole("super")}
+                className={`px-8 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  role === "super"
+                    ? "bg-blue-600 text-white shadow-lg scale-105"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
               >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                Super Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("sub")}
+                className={`px-8 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  role === "sub"
+                    ? "bg-blue-600 text-white shadow-lg scale-105"
+                    : "text-gray-600 hover:text-blue-600"
+                }`}
+              >
+                Sub-Admin
               </button>
             </div>
           </div>
 
-          {/* Forgot Password Link */}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              disabled={isResettingPassword}
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors disabled:text-indigo-400 disabled:cursor-not-allowed flex items-center gap-1"
-            >
-              {isResettingPassword && (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              )}
-              {isResettingPassword ? "Sending..." : "Forgot Password?"}
-            </button>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block font-semibold text-gray-700 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={credentials.email}
+                onChange={handleChange}
+                required
+                className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50 hover:bg-white"
+                placeholder="you@example.com"
+              />
+            </div>
 
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="w-full flex justify-center items-center gap-2 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoggingIn && <Loader2 className="w-5 h-5 animate-spin" />}
-              {isLoggingIn ? "Signing In..." : "Login"}
-            </button>
-          </div>
-        </form>
+            <div>
+              <label className="block font-semibold text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={credentials.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-4 pr-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50 hover:bg-white"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={isResettingPassword}
+                className="text-sm text-blue-600 hover:text-blue-800 font-semibold transition-colors disabled:text-blue-400 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                {isResettingPassword && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
+                {isResettingPassword ? "Sending..." : "Forgot Password?"}
+              </button>
+            </div>
+
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full flex justify-center items-center gap-2 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-blue-400 disabled:to-blue-500 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {isLoggingIn && <Loader2 className="w-5 h-5 animate-spin" />}
+                {isLoggingIn ? "Signing In..." : "Login"}
+              </button>
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+              <p className="text-sm text-gray-600">
+                🔒 Your session will remain active for 7 days
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

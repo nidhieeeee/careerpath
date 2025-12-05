@@ -112,22 +112,22 @@ const Header = () => {
           : "bg-transparent transition-all duration-300"
       }`}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+      <div className="w-full px-6">
+        <div className="flex justify-between items-center h-24">
           {/* Logo */}
           <Link to="/" className="flex items-center flex-shrink-0">
             <img
               src="/logoCP.png"
               alt="CareerPath Logo"
-              className="w-20 h-20 object-contain"
+              className="w-32 h-32 object-contain"
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center">
+          <nav className="hidden lg:flex items-center space-x-2 flex-1 justify-center">
             <Link
               to="/"
-              className={`px-3 py-2 text-sm font-medium transition-colors rounded-md ${
+              className={`px-4 py-3 text-base font-medium transition-colors rounded-md ${
                 location.pathname === "/"
                   ? "text-blue-600 bg-blue-50"
                   : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
@@ -140,28 +140,30 @@ const Header = () => {
               const Icon = category.icon;
               return (
                 <div key={category.id} className="relative group">
-                  <button className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center gap-1 transition-colors">
-                    <Icon size={16} />
+                  <button className="px-4 py-3 text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center gap-1.5 transition-colors">
+                    <Icon size={18} />
                     {category.label}
                     <ChevronDown
-                      size={16}
+                      size={18}
                       className="group-hover:rotate-180 transition-transform"
                     />
                   </button>
 
                   {/* Dropdown Menu */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 mt-0 w-56 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-10">
+                  <div className="absolute left-1/2 transform -translate-x-1/2 mt-0 w-64 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-10">
                     {category.items.map((item) => (
                       <Link
                         key={item.path}
                         to={item.path}
-                        className={`block px-4 py-2 text-sm transition-colors ${
+                        className={`block px-5 py-3 text-sm transition-colors ${
                           location.pathname === item.path
                             ? "bg-blue-50 text-blue-600 font-semibold"
                             : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                         }`}
                       >
-                        <div className="font-medium">{item.label}</div>
+                        <div className="font-medium text-base">
+                          {item.label}
+                        </div>
                         <div className="text-xs text-gray-500">
                           {item.description}
                         </div>

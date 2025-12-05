@@ -4,6 +4,7 @@ import MeritListCard from "../components/meritList/MeritListCard";
 import { SearchFilter, ActiveFilters } from "../components/common/FilterPanel";
 import { useSearch } from "../hooks/useFilteredData";
 import axios from "axios";
+import { MeritListCardSkeleton } from "../components/common/SkeletonLoaders";
 
 const MeritListPage = () => {
   const boards = ["Gujarat Board", "Maharashtra Board", "CBSE"];
@@ -118,7 +119,13 @@ const MeritListPage = () => {
       {/* Merit Lists Grid */}
       <div className="container mx-auto px-4 py-6">
         {loading ? (
-          <p className="text-center text-gray-600">Loading merit lists...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array(9)
+              .fill(0)
+              .map((_, idx) => (
+                <MeritListCardSkeleton key={idx} />
+              ))}
+          </div>
         ) : error ? (
           <p className="text-center text-red-600">{error}</p>
         ) : filteredMeritLists.length > 0 ? (
