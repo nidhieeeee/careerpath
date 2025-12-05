@@ -6,32 +6,8 @@ import useDataStore from '../store/useDataStore';
 // --- Helper Functions ---
 
 /**
- * Extracts significant keywords from a course name string.
- * Helps match similar courses like "B.Tech in Computer Science" and "Computer Science & Engineering".
- */
-const getCourseKeywords = (name = '') => {
-  const stopWords = new Set([
-    'of',
-    'in',
-    'and',
-    'a',
-    'the',
-    'for',
-    'with',
-    'an',
-    'to',
-    'from',
-    'program',
-  ]);
-
-  const normalizedName = name.toLowerCase().replace(/[(),-]/g, ' ');
-  return normalizedName
-    .split(/\s+/)
-    .filter(word => word && word.length > 2 && !stopWords.has(word));
-};
-
-/**
  * Checks if an institute has any ranking data.
+ * (Currently unused for priority, but kept if you want later.)
  */
 const hasRankingData = (institute) => {
   if (!institute?.rankings) return false;
@@ -78,59 +54,46 @@ const CourseDetailPage = () => {
 
   const course = courses.find((c) => c._id === id || c.courseId === id);
 
-  // --- Recommended Institutes (by similar course name) ---
+  // Helper: courseCategory keys to match against (supports id or name)
+  const courseCategoryKeys = useMemo(() => {
+    if (!course) return [];
+    return [course.courseId, course._id, course.name]
+      .filter(Boolean)
+      .map(v => String(v).toLowerCase());
+  }, [course]);
+
+  // --- Recommended Institutes (by courseCategory) ---
   const recommendedInstitutes = useMemo(() => {
-    const mainKeywords = getCourseKeywords(course?.name);
-    if (!course || mainKeywords.length === 0 || institutes.length === 0) return [];
+    if (!course || institutes.length === 0 || courseCategoryKeys.length === 0) return [];
 
-    const allMatches = new Map();
-    const REQUIRED_MATCHES = 1; // at least 1 common keyword
-
-    // Primary search: top / ranked institutes first
-    const topMatches = institutes.filter(inst => {
-      const isConsideredTop = inst.isTopInstitute || hasRankingData(inst);
-      const offersSimilarCourse = (inst.courses || []).some(instCourse => {
-        const instKeywords = getCourseKeywords(instCourse.name);
-        const sharedKeywords = mainKeywords.filter(k => instKeywords.includes(k));
-        return sharedKeywords.length >= REQUIRED_MATCHES;
+    const matches = institutes.filter(inst => {
+      const instCourses = inst.courses || [];
+      return instCourses.some(c => {
+        if (!c.courseCategory) return false;
+        const cat = String(c.courseCategory).toLowerCase();
+        return courseCategoryKeys.includes(cat);
       });
-      return isConsideredTop && offersSimilarCourse;
     });
 
-    topMatches.forEach(inst =>
-      allMatches.set(inst.instituteCode, { ...inst, isPrioritized: true })
-    );
-
-    // Fallback: if <5 results, add more matching institutes
-    if (allMatches.size < 5) {
-      const additionalMatches = institutes.filter(inst => {
-        if (allMatches.has(inst.instituteCode)) return false;
-
-        return (inst.courses || []).some(instCourse => {
-          const instKeywords = getCourseKeywords(instCourse.name);
-          const sharedKeywords = mainKeywords.filter(k => instKeywords.includes(k));
-          return sharedKeywords.length >= REQUIRED_MATCHES;
-        });
+    // Sort: isTopInstitute first, then by name
+    return matches
+      .map(inst => ({
+        ...inst,
+        isPrioritized: !!inst.isTopInstitute,
+      }))
+      .sort((a, b) => {
+        if (a.isPrioritized && !b.isPrioritized) return -1;
+        if (!a.isPrioritized && b.isPrioritized) return 1;
+        return (a.name || '').localeCompare(b.name || '');
       });
+  }, [course, institutes, courseCategoryKeys]);
 
-      additionalMatches.forEach(inst =>
-        allMatches.set(inst.instituteCode, { ...inst, isPrioritized: false })
-      );
+  // --- Approx Fee Range & Total Seats (based on courseCategory) ---
+  const { feeRangeDisplay, totalSeatsDisplay } = useMemo(() => {
+    if (!course || institutes.length === 0 || courseCategoryKeys.length === 0) {
+      return { feeRangeDisplay: 'N/A', totalSeatsDisplay: 'N/A' };
     }
 
-    // Sort: prioritized first
-    return Array.from(allMatches.values()).sort((a, b) => {
-      if (a.isPrioritized && !b.isPrioritized) return -1;
-      if (!a.isPrioritized && b.isPrioritized) return 1;
-      return 0;
-    });
-  }, [course, institutes]);
-
-  // --- Approx Fee Range & Total Seats ---
-  const { feeRangeDisplay, totalSeatsDisplay } = useMemo(() => {
-    if (!course) return { feeRangeDisplay: 'N/A', totalSeatsDisplay: 'N/A' };
-
-    const mainKeywords = getCourseKeywords(course.name);
     const fees = [];
     const seats = [];
 
@@ -149,31 +112,18 @@ const CourseDetailPage = () => {
       }
     };
 
-    // Step 1 – use recommended institutes
-    recommendedInstitutes.forEach(inst => {
+    // Step 1 – use all institutes where courseCategory matches
+    institutes.forEach(inst => {
       (inst.courses || []).forEach(instCourse => {
-        const instKeywords = getCourseKeywords(instCourse.name);
-        const shared = mainKeywords.filter(k => instKeywords.includes(k));
-        if (shared.length >= 1) {
+        if (!instCourse.courseCategory) return;
+        const cat = String(instCourse.courseCategory).toLowerCase();
+        if (courseCategoryKeys.includes(cat)) {
           collectFeeSeat(instCourse);
         }
       });
     });
 
-    // Step 2 – fallback search in ALL institutes if no fee found yet
-    if (fees.length === 0 && institutes.length > 0) {
-      institutes.forEach(inst => {
-        (inst.courses || []).forEach(instCourse => {
-          const instKeywords = getCourseKeywords(instCourse.name);
-          const shared = mainKeywords.filter(k => instKeywords.includes(k));
-          if (shared.length >= 1) {
-            collectFeeSeat(instCourse);
-          }
-        });
-      });
-    }
-
-    // Step 3 – final fallback to the base course itself
+    // Step 2 – fallback to base course if nothing found
     if (fees.length === 0 && course.fees) {
       const feeVals = extractFeeNumbers(course.fees);
       if (feeVals.length > 0) fees.push(...feeVals);
@@ -182,7 +132,6 @@ const CourseDetailPage = () => {
       seats.push(course.seats);
     }
 
-    // Always show MIN - MAX
     const formatFeeRange = (arr) => {
       if (!arr.length) return 'N/A';
       const min = Math.min(...arr);
@@ -201,7 +150,7 @@ const CourseDetailPage = () => {
       feeRangeDisplay: formatFeeRange(fees),
       totalSeatsDisplay: formatTotalSeats(seats),
     };
-  }, [course, recommendedInstitutes, institutes]);
+  }, [course, institutes, courseCategoryKeys]);
 
   // --- UI ---
 
@@ -240,12 +189,16 @@ const CourseDetailPage = () => {
           </Link>
           <h1 className="text-2xl md:text-3xl font-bold mb-2">{course.name}</h1>
           <div className="flex items-center space-x-2">
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
-              {course.type}
-            </span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
-              {course.stream}
-            </span>
+            {course.type && (
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
+                {course.type}
+              </span>
+            )}
+            {course.stream && (
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
+                {course.stream}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -266,7 +219,7 @@ const CourseDetailPage = () => {
                   <Clock className="w-5 h-5 text-gray-500 mr-3" />
                   <div>
                     <p className="text-sm text-gray-500">Duration</p>
-                    <p className="font-medium">{course.duration}</p>
+                    <p className="font-medium">{course.duration || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -286,7 +239,7 @@ const CourseDetailPage = () => {
                 <div className="flex items-center">
                   <Users className="w-5 h-5 text-gray-500 mr-3" />
                   <div>
-                    <p className="text-sm text-gray-500">Average Available Seats</p>
+                    <p className="text-sm text-gray-500">Total Available Seats (Approx.)</p>
                     <p className="font-medium">{totalSeatsDisplay}</p>
                   </div>
                 </div>
@@ -323,10 +276,17 @@ const CourseDetailPage = () => {
               <div className="space-y-4">
                 {recommendedInstitutes.length > 0 ? (
                   recommendedInstitutes.slice(0, 10).map((institute) => (
-                    <div key={institute.instituteCode} className="flex items-start">
+                    <div key={institute.instituteCode || institute._id} className="flex items-start">
                       <Building2 className="w-5 h-5 text-gray-500 mr-3 mt-1 flex-shrink-0" />
                       <div>
-                        <p className="font-medium text-gray-800">{institute.name}</p>
+                        <p className="font-medium text-gray-800">
+                          {institute.name}
+                          {institute.isTopInstitute && (
+                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700">
+                              Top Institute
+                            </span>
+                          )}
+                        </p>
                         <p className="text-sm text-gray-500">
                           {institute.location?.city}
                         </p>
@@ -335,7 +295,7 @@ const CourseDetailPage = () => {
                   ))
                 ) : (
                   <p className="text-sm text-gray-500">
-                    No institutes found offering a similar course.
+                    No institutes found offering this course yet.
                   </p>
                 )}
               </div>
