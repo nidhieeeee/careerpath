@@ -4,7 +4,7 @@ import { User } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard", path: "/subadmin/dashboard" },
-  { label: "Courses", path: "/subadmin/courses" },
+  // { label: "Courses", path: "/subadmin/courses" },
   { label: "Articles", path: "/subadmin/articles" },
   { label: "Merit Lists", path: "/subadmin/meritlists" },
 ];
@@ -59,7 +59,7 @@ const SubAdminNavbar = () => {
           ))}
 
           {/* Profile Icon */}
-          <div className="relative">
+          {/* <div className="relative">
             <button
               onClick={() => handleNavigation("/subadmin/account")}
               className="p-2 text-gray-600 hover:text-white hover:bg-blue-600 rounded-full transition-all duration-300"
@@ -67,7 +67,7 @@ const SubAdminNavbar = () => {
             >
               <User className="w-6 h-6" />
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Mobile Menu Button */}
@@ -115,7 +115,7 @@ const SubAdminNavbar = () => {
             ))}
 
             {/* Mobile Profile Link */}
-            <button
+            {/* <button
               onClick={() => {
                 setIsMenuOpen(false);
                 handleNavigation("/subadmin/account");
@@ -124,7 +124,7 @@ const SubAdminNavbar = () => {
             >
               <User className="w-4 h-4" />
               Account Settings
-            </button>
+            </button> */}
           </div>
         </div>
       )}
