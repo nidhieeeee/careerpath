@@ -23,7 +23,7 @@ const HomePage = () => {
   // State to track scroll button visibility for each section
   const [scrollStates, setScrollStates] = useState({
     allCourses: { showLeft: false, showRight: true },
-    institutes: { showLeft: false, showRight: true },
+    allInstitutes: { showLeft: false, showRight: true },
     meritLists: { showLeft: false, showRight: true },
     articles: { showLeft: false, showRight: true },
   });
@@ -40,6 +40,17 @@ const HomePage = () => {
     // Return all courses
     return courses;
   }, [courses]);
+
+  // --- LOGIC TO GET ALL INSTITUTES SORTED ALPHABETICALLY ---
+  const allInstitutes = useMemo(() => {
+    if (!topInstitutes || topInstitutes.length === 0) {
+      return [];
+    }
+    // Sort alphabetically by institute name
+    return [...topInstitutes].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }, [topInstitutes]);
 
   // Function to update scroll button visibility
   const updateScrollButtons = (scrollId, stateKey) => {
@@ -60,7 +71,7 @@ const HomePage = () => {
   useEffect(() => {
     const sections = [
       { id: "all-courses-scroll", key: "allCourses" },
-      { id: "institutes-scroll", key: "institutes" },
+      { id: "all-institutes-scroll", key: "allInstitutes" },
       { id: "merit-lists-scroll", key: "meritLists" },
       { id: "articles-scroll", key: "articles" },
     ];
@@ -84,7 +95,7 @@ const HomePage = () => {
         }
       });
     };
-  }, [allCourses, topInstitutes, articles]);
+  }, [allCourses, allInstitutes, articles]);
 
   if (loading) {
     return (
@@ -299,13 +310,13 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Top Institutes */}
+      {/* All Institutes */}
       <section className="py-10 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
               <Building className="w-6 h-6 mr-2 text-blue-600" />
-              Top Institutes
+              All Institutes
             </h2>
             <Link
               to="/institutes"
@@ -329,72 +340,76 @@ const HomePage = () => {
           </div>
           <div className="relative group">
             <div
-              id="institutes-scroll"
+              id="all-institutes-scroll"
               className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide scroll-smooth"
             >
               <div
                 className="flex space-x-6"
                 style={{ minWidth: "max-content" }}
               >
-                {topInstitutes.length > 0 ? (
-                  topInstitutes.map((institute) => (
+                {allInstitutes.length > 0 ? (
+                  allInstitutes.map((institute) => (
                     <div key={institute._id} className="w-80 flex-shrink-0">
                       <InstituteCard institute={institute} />
                     </div>
                   ))
                 ) : (
                   <p className="text-gray-500">
-                    No top institutes available at the moment.
+                    No institutes available at the moment.
                   </p>
                 )}
               </div>
             </div>
-            {topInstitutes.length > 3 && (
+            {allInstitutes.length > 3 && (
               <>
-                <button
-                  onClick={() => {
-                    const container =
-                      document.getElementById("institutes-scroll");
-                    container.scrollBy({ left: -350, behavior: "smooth" });
-                  }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
-                >
-                  <svg
-                    className="w-6 h-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {scrollStates.allInstitutes.showLeft && (
+                  <button
+                    onClick={() => {
+                      const container =
+                        document.getElementById("all-institutes-scroll");
+                      container.scrollBy({ left: -350, behavior: "smooth" });
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => {
-                    const container =
-                      document.getElementById("institutes-scroll");
-                    container.scrollBy({ left: 350, behavior: "smooth" });
-                  }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
-                >
-                  <svg
-                    className="w-6 h-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    <svg
+                      className="w-6 h-6 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+                )}
+                {scrollStates.allInstitutes.showRight && (
+                  <button
+                    onClick={() => {
+                      const container =
+                        document.getElementById("all-institutes-scroll");
+                      container.scrollBy({ left: 350, behavior: "smooth" });
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-6 h-6 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                )}
               </>
             )}
           </div>

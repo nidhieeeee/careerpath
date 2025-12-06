@@ -244,14 +244,14 @@ const InstitutesPage = () => {
       </div>
 
       {/* Search Bar */}
-      {/* <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-4">
         <SearchFilter
           value={searchTerm}
           onChange={updateSearchTerm}
           placeholder="Search institutes by name..."
           className="max-w-md"
         />
-      </div> */}
+      </div>
 
       {/* Filters */}
       <div className="container mx-auto px-4 pb-4">

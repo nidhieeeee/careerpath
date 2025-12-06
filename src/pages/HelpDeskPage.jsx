@@ -411,7 +411,7 @@ const HelpDeskPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12 md:py-16 px-4">
+      <div className="bg-blue-600 text-white py-12 md:py-16 px-4">
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center mb-4">
             <HelpCircle size={48} />
