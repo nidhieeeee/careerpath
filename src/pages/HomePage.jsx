@@ -22,7 +22,7 @@ const HomePage = () => {
 
   // State to track scroll button visibility for each section
   const [scrollStates, setScrollStates] = useState({
-    trendingCourses: { showLeft: false, showRight: true },
+    allCourses: { showLeft: false, showRight: true },
     institutes: { showLeft: false, showRight: true },
     meritLists: { showLeft: false, showRight: true },
     articles: { showLeft: false, showRight: true },
@@ -32,30 +32,13 @@ const HomePage = () => {
     fetchAllData();
   }, [fetchAllData]);
 
-  // --- NEW LOGIC TO SORT COURSES BY POPULARITY ---
-  const trendingCourses = useMemo(() => {
-    // Define the order of popularity
-    const popularityOrder = {
-      high: 3,
-      moderate: 2,
-      low: 1,
-    };
-
+  // --- LOGIC TO GET ALL COURSES ---
+  const allCourses = useMemo(() => {
     if (!courses || courses.length === 0) {
       return [];
     }
-
-    // Create a copy of the courses array to avoid mutating the original state
-    const sortedCourses = [...courses].sort((a, b) => {
-      // Get the numerical value for each course's popularity, defaulting to 0 if not present
-      const popularityA = popularityOrder[a.popularity?.toLowerCase()] || 0;
-      const popularityB = popularityOrder[b.popularity?.toLowerCase()] || 0;
-      // Sort in descending order (High > Moderate > Low)
-      return popularityB - popularityA;
-    });
-
-    // Return only the top 10 trending courses
-    return sortedCourses.slice(0, 10);
+    // Return all courses
+    return courses;
   }, [courses]);
 
   // Function to update scroll button visibility
@@ -76,7 +59,7 @@ const HomePage = () => {
   // Add scroll event listeners for all sections
   useEffect(() => {
     const sections = [
-      { id: "trending-courses-scroll", key: "trendingCourses" },
+      { id: "all-courses-scroll", key: "allCourses" },
       { id: "institutes-scroll", key: "institutes" },
       { id: "merit-lists-scroll", key: "meritLists" },
       { id: "articles-scroll", key: "articles" },
@@ -101,7 +84,7 @@ const HomePage = () => {
         }
       });
     };
-  }, [trendingCourses, topInstitutes, articles]);
+  }, [allCourses, topInstitutes, articles]);
 
   if (loading) {
     return (
@@ -210,13 +193,13 @@ const HomePage = () => {
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Trending Courses */}
+      {/* All Courses */}
       <section className="py-10 px-4">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
               <TrendingUp className="w-6 h-6 mr-2 text-orange-500" />
-              Trending Courses
+              All Courses
             </h2>
             <Link
               to="/courses"
@@ -240,74 +223,76 @@ const HomePage = () => {
           </div>
           <div className="relative group">
             <div
-              id="trending-courses-scroll"
+              id="all-courses-scroll"
               className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide scroll-smooth"
             >
               <div
                 className="flex space-x-6"
                 style={{ minWidth: "max-content" }}
               >
-                {trendingCourses.length > 0 ? (
-                  trendingCourses.map((course) => (
+                {allCourses.length > 0 ? (
+                  allCourses.map((course) => (
                     <div key={course._id} className="w-80 flex-shrink-0">
                       <CourseCard course={course} />
                     </div>
                   ))
                 ) : (
                   <p className="text-gray-500">
-                    No trending courses available at the moment.
+                    No courses available at the moment.
                   </p>
                 )}
               </div>
             </div>
-            {trendingCourses.length > 3 && (
+            {allCourses.length > 3 && (
               <>
-                <button
-                  onClick={() => {
-                    const container = document.getElementById(
-                      "trending-courses-scroll"
-                    );
-                    container.scrollBy({ left: -350, behavior: "smooth" });
-                  }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
-                >
-                  <svg
-                    className="w-6 h-6 text-orange-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {scrollStates.allCourses.showLeft && (
+                  <button
+                    onClick={() => {
+                      const container =
+                        document.getElementById("all-courses-scroll");
+                      container.scrollBy({ left: -350, behavior: "smooth" });
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => {
-                    const container = document.getElementById(
-                      "trending-courses-scroll"
-                    );
-                    container.scrollBy({ left: 350, behavior: "smooth" });
-                  }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
-                >
-                  <svg
-                    className="w-6 h-6 text-orange-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    <svg
+                      className="w-6 h-6 text-orange-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+                )}
+                {scrollStates.allCourses.showRight && (
+                  <button
+                    onClick={() => {
+                      const container =
+                        document.getElementById("all-courses-scroll");
+                      container.scrollBy({ left: 350, behavior: "smooth" });
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-6 h-6 text-orange-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                )}
               </>
             )}
           </div>
