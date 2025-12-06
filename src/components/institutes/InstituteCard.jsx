@@ -52,7 +52,7 @@ const InstituteCard = ({ institute }) => {
         {/* Affiliation */}
         <div className="mb-4">
           <span className="text-xs font-medium bg-blue-50 text-blue-800 px-2 py-1 rounded-full">
-            {institute.affiliation || "Not Affiliated"}
+            {institute.affilication || "Not Affiliated"}
           </span>
         </div>
 
