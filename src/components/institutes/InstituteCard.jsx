@@ -50,13 +50,11 @@ const InstituteCard = ({ institute }) => {
         </div>
 
         {/* Affiliation */}
-        {institute.affiliation && (
-          <div className="mb-4">
-            <span className="text-xs font-medium bg-blue-50 text-blue-800 px-2 py-1 rounded-full">
-              {institute.affiliation}
-            </span>
-          </div>
-        )}
+        <div className="mb-4">
+          <span className="text-xs font-medium bg-blue-50 text-blue-800 px-2 py-1 rounded-full">
+            {institute.affiliation || "Not Affiliated"}
+          </span>
+        </div>
 
         {/* Links */}
         <div className="flex items-center justify-between">

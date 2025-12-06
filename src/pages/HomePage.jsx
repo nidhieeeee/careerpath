@@ -47,9 +47,7 @@ const HomePage = () => {
       return [];
     }
     // Sort alphabetically by institute name
-    return [...topInstitutes].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    return [...topInstitutes].sort((a, b) => a.name.localeCompare(b.name));
   }, [topInstitutes]);
 
   // Function to update scroll button visibility
@@ -365,8 +363,9 @@ const HomePage = () => {
                 {scrollStates.allInstitutes.showLeft && (
                   <button
                     onClick={() => {
-                      const container =
-                        document.getElementById("all-institutes-scroll");
+                      const container = document.getElementById(
+                        "all-institutes-scroll"
+                      );
                       container.scrollBy({ left: -350, behavior: "smooth" });
                     }}
                     className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
@@ -389,8 +388,9 @@ const HomePage = () => {
                 {scrollStates.allInstitutes.showRight && (
                   <button
                     onClick={() => {
-                      const container =
-                        document.getElementById("all-institutes-scroll");
+                      const container = document.getElementById(
+                        "all-institutes-scroll"
+                      );
                       container.scrollBy({ left: 350, behavior: "smooth" });
                     }}
                     className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-3 transition-all duration-300 z-10 hover:scale-110"
