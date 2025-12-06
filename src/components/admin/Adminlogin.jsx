@@ -198,12 +198,6 @@ export default function Adminlogin() {
               </button>
             </div>
 
-            {/* Additional Info */}
-            <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-              <p className="text-sm text-gray-600">
-                🔒 Your session will remain active for 7 days
-              </p>
-            </div>
           </form>
         </div>
       </div>

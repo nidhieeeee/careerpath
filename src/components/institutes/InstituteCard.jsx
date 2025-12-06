@@ -42,12 +42,21 @@ const InstituteCard = ({ institute }) => {
         </div>
 
         {/* Courses Offered */}
-        <div className="flex items-center mb-4">
+        <div className="flex items-center mb-2">
           <GraduationCap className="w-4 h-4 text-gray-500 mr-1 flex-shrink-0" />
           <span className="text-sm text-gray-600">
             {institute.courses.length} Courses Offered
           </span>
         </div>
+
+        {/* Affiliation */}
+        {institute.affiliation && (
+          <div className="mb-4">
+            <span className="text-xs font-medium bg-blue-50 text-blue-800 px-2 py-1 rounded-full">
+              {institute.affiliation}
+            </span>
+          </div>
+        )}
 
         {/* Links */}
         <div className="flex items-center justify-between">
